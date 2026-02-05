@@ -1,0 +1,14 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": "arn:${PARTITION}:s3:::${ACCELERATOR_CENTRAL_LOGS_BUCKET_NAME}/*",
+            "Effect": "Allow",
+            "Sid": "AllowWriteAccessToCentralisedBucket"
+        }
+    ]
+}

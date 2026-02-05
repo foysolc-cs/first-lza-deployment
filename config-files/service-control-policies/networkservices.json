@@ -1,0 +1,88 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "NET1",
+      "Effect": "Deny",
+      "Action": [
+        "dynamodb:*",
+        "elasticache:*",
+        "elasticbeanstalk:*",
+        "glue:*",
+        "rds:*",
+        "redshift:*",
+        "sagemaker:*",
+        "sqs:*",
+        "xray:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NFW",
+      "Effect": "Deny",
+      "Action": [
+        "network-firewall:AssociateSub*",
+        "network-firewall:Create*",
+        "network-firewall:Delete*",
+        "network-firewall:DisassociateSub*",
+        "network-firewall:Update*"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:network-firewall:*:*:firewal*/${ACCELERATOR_PREFIX}*",
+        "arn:${PARTITION}:network-firewall:*:*:state*/${ACCELERATOR_PREFIX}*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NET2",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:DeleteCustomerGateway",
+        "ec2:DeleteDhcpOptions",
+        "ec2:DeleteInternetGateway",
+        "ec2:DeleteIp*",
+        "ec2:DeleteNatGateway",
+        "ec2:DeleteRoute",
+        "ec2:DeleteRouteTable",
+        "ec2:DeleteSubnet",
+        "ec2:DeleteTransitGatewayRoute",
+        "ec2:DeleteTransitGatewayRouteTable",
+        "ec2:DeleteTransitGatewayVpcAttachment",
+        "ec2:DeleteVpc",
+        "ec2:DeleteVpcEndpoints",
+        "ec2:DeleteVpcPeeringConnection",
+        "ec2:DeleteVpnConnection",
+        "ec2:DeleteVpnGateway",
+        "ec2:DetachInternetGateway",
+        "ec2:DetachVpnGateway",
+        "ec2:DisassociateRouteTable"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:ResourceTag/Accelerator": "${ACCELERATOR_PREFIX}"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*"
+          ]
+        }
+      }
+    }
+  ]
+}

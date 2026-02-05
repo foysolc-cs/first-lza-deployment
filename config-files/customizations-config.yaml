@@ -1,0 +1,62 @@
+customizations:
+  cloudFormationStacks:
+    # Deploying the Workload IAM Role to the Workloads OU
+    - deploymentTargets:
+        organizationalUnits:
+          - Workloads
+          - Workloads/Dev
+          - Workloads/Pre
+          - Workloads/Pro
+      description: CloudFormation Stack to deploy the IAM role for workloads.
+      name: elz-terraform-bootstrap-deployment
+      regions:
+        - eu-west-2
+      runOrder: 1
+      template: resources/cloudformation/tf-bootstrap.yaml
+      parameters:
+        - name: GitHubOrganisation
+          value: cloudscaler
+        - name: GitHubThumprint
+          value: 6938fd4d98bab03faadb97b34396831e3780aea1
+      terminationProtection: false
+
+    # Deploying the Platform IAM Role to Management account
+    - deploymentTargets:
+        accounts:
+          - Management
+      description: CloudFormation Stack to deploy the Platform IAM Role to Management account.
+      name: elz-platform-role-deployment
+      regions:
+        - eu-west-2
+      runOrder: 1
+      template: resources/cloudformation/platform-role.yaml
+      parameters:
+        - name: GitHubOrganisation
+          value: cloudscaler
+        - name: GitHubThumprint
+          value: 6938fd4d98bab03faadb97b34396831e3780aea1
+      terminationProtection: false
+
+    # # Deploying the Platform Terraform Module Pipeline to Management account
+    # - deploymentTargets:
+    #     accounts:
+    #       - Management
+    #   description: CloudFormation Stack to deploy the Platform Pipeline to Management account.
+    #   name: elz-platform-pipeline-deployment
+    #   regions:
+    #     - eu-west-2
+    #   runOrder: 1
+    #   template: resources/cloudformation/platform-pipeline.yaml
+    #   terminationProtection: false
+
+    # Deploying SecHub Suppression to Audit account
+    - deploymentTargets:
+        accounts:
+          - Audit
+      description: Cloudformation Stack to deploy SecHub Automation Rules for suppressing findings relating to LZA-specific infrastructure.
+      name: elz-platform-sechub-suppression-deployment
+      regions:
+        - eu-west-2
+      runOrder: 1
+      template: resources/cloudformation/sechub-suppression.yaml
+      terminationProtection: false

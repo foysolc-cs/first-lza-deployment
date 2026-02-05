@@ -1,0 +1,62 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyAdminServiceOperations",
+      "Effect": "Deny",
+      "Action": [
+        "backup:CreateBackupPlan",
+        "backup:CreateBackupSelection",
+        "backup:CreateBackupVault",
+        "backup:DeleteBackupPlan",
+        "backup:DeleteBackupSelection",
+        "backup:DeleteBackupVault",
+        "backup:DeleteBackupVaultAccessPolicy",
+        "backup:DeleteBackupVaultNotifications",
+        "backup:DeleteRecoveryPoint",
+        "backup:DisassociateRecoveryPoint",
+        "backup:PutBackupVaultAccessPolicy",
+        "backup:PutBackupVaultNotifications",
+        "backup:UpdateBackupPlan",
+        "backup:UpdateRecoveryPointLifecycle"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowOperations",
+      "Effect": "Allow",
+      "Action": [
+        "backup:CopyFromBackupVault",
+        "backup:StartBackupJob",
+        "backup:StartCopyJob",
+        "backup:StopBackupJob"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "DenyCopyFromUnlessInOrg",
+      "Effect": "Deny",
+      "Action": [
+        "backup:CopyFromBackupVault",
+        "backup:CopyIntoBackupVault"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:PrincipalOrgID": "${ORG_ID}"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This CloudFormation template will deploy the OIDC Provider and Platform IAM Role to the Management account for Terraform deployments.
+Parameters:
+  GitHubThumprint:
+    Type: CommaDelimitedList
+    Description: Server certificate thumbprint is the hex-encoded SHA-1 hash value of the X.509 certificate used by the domain where the OpenID Connect provider makes its keys available
+  GitHubOrganisation:
+    Type: String
+    Description: The GitHub Organisation name to trust
+Resources:
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: OrganizationAccountAccessRole
+      ManagedPolicyArns: [arn:aws:iam::aws:policy/AdministratorAccess]
+      AssumeRolePolicyDocument:
+        Statement:
+          - Sid: AllowRepositories
+            Effect: Allow
+            Action:
+              - sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated:
+                - !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Condition:
+              ForAnyValue:StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganisation}/*
+          - Sid: AllowAll
+            Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root

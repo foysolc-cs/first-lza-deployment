@@ -1,0 +1,317 @@
+homeRegion: &HOME_REGION eu-west-2
+centralSecurityServices:
+  delegatedAdminAccount: Audit
+  ebsDefaultVolumeEncryption:
+    enable: true
+    excludeRegions: []
+  s3PublicAccessBlock:
+    enable: true
+    excludeAccounts: []
+  scpRevertChangesConfig:
+    enable: true
+    snsTopicName: SecurityHigh
+  macie:
+    enable: false
+    excludeRegions: []
+    policyFindingsPublishingFrequency: FIFTEEN_MINUTES
+    publishSensitiveDataFindings: true
+  guardduty:
+    enable: true
+    excludeRegions: []
+    s3Protection:
+      enable: true
+      excludeRegions: []
+    eksProtection:
+      enable: true
+      excludeRegions: []
+    exportConfiguration:
+      enable: true
+      overrideExisting: true
+      destinationType: S3
+      exportFrequency: FIFTEEN_MINUTES
+  auditManager:
+    enable: true
+    excludeRegions: []
+    defaultReportsConfiguration:
+      enable: true
+      destinationType: S3
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  detective:
+    enable: false
+    excludeRegions: []
+  securityHub:
+    enable: true
+    regionAggregation: true
+    excludeRegions: []
+    standards:
+      - name: AWS Foundational Security Best Practices v1.0.0
+        enable: true
+        controlsToDisable:
+          - Config.1
+          - EC2.10
+          - EC2.172
+          - Inspector.1
+          - Inspector.2
+          - Inspector.3
+          - Inspector.4
+          - GuardDuty.6
+          - GuardDuty.7
+          - GuardDuty.8
+          - GuardDuty.9
+          - GuardDuty.11
+          - GuardDuty.12
+          - GuardDuty.13
+      - name: PCI DSS v3.2.1
+        enable: true
+        controlsToDisable:
+          - PCI.Config.1 #Config.1
+          - PCI.Lambda.2 #Lambda.3
+          - PCI.S3.3     #S3.7
+      - name: CIS AWS Foundations Benchmark v3.0.0
+        enable: true
+        controlsToDisable:
+          - '1.20'  #IAM.28
+          - '2.1.2' #S3.20
+          - '3.3'   #Config.1
+      - name: CIS AWS Foundations Benchmark v1.2.0
+        enable: false
+      - name: CIS AWS Foundations Benchmark v1.4.0
+        enable: false
+      - name: NIST Special Publication 800-53 Revision 5
+        enable: true
+        controlsToDisable:
+          - Config.1
+          - EC2.10
+          - Lambda.3
+          - RDS.11
+          - S3.7
+          - S3.11
+          - S3.15
+          - S3.20
+  ssmAutomation:
+    excludeRegions: []
+    documentSets:
+      - shareTargets:
+          organizationalUnits:
+            - Root
+        documents:
+          - name: SSM-ELB-Enable-Logging
+            template: ssm-documents/ssm-elb-enable-logging.yaml
+          - name: Attach-IAM-Instance-Profile
+            template: ssm-documents/attach-iam-instance-profile.yaml
+          - name: Attach-IAM-Role-Policy
+            template: ssm-documents/attach-iam-role-policy.yaml
+accessAnalyzer:
+  enable: true
+iamPasswordPolicy:
+  allowUsersToChangePassword: true
+  hardExpiry: false
+  requireUppercaseCharacters: true
+  requireLowercaseCharacters: true
+  requireSymbols: true
+  requireNumbers: true
+  minimumPasswordLength: 14
+  passwordReusePrevention: 24
+  maxPasswordAge: 90
+awsConfig:
+  enableConfigurationRecorder: true
+  aggregation:
+    enable: true
+    delegatedAdminAccount: Audit
+  ruleSets:
+    - deploymentTargets:
+        organizationalUnits:
+          - Root
+      rules:
+        - name: "{{ AcceleratorPrefix }}-accelerator-ec2-instance-profile-permission"
+          type: Custom
+          description: Custom role to remediate EC2 instance profile permission
+          inputParameters:
+            AWSManagedPolicies: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+            ResourceId: RESOURCE_ID
+          customRule:
+            lambda:
+              sourceFilePath: custom-config-rules/ec2-instance-profile-permissions.zip
+              handler: index.handler
+              runtime: nodejs22.x
+              rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-detection-role.json
+            periodic: true
+            maximumExecutionFrequency: Six_Hours
+            configurationChanges: true
+            triggeringResources:
+              lookupType: ResourceTypes
+              lookupKey: ResourceTypes
+              lookupValue:
+                - AWS::IAM::Role
+          tags:
+            - key: Accelerator
+              value: '{{ AcceleratorPrefix }}'
+          remediation:
+            rolePolicyFile: custom-config-rules/ec2-instance-profile-permissions-remediation-role.json
+            automatic: true
+            targetId: Attach-IAM-Role-Policy
+            targetAccountName: Audit
+            retryAttemptSeconds: 60
+            maximumAutomaticAttempts: 5
+            parameters:
+              - name: ResourceId
+                value: RESOURCE_ID
+                type: String
+              - name: AWSManagedPolicies
+                value: AmazonSSMManagedInstanceCore,AmazonSSMDirectoryServiceAccess,CloudWatchAgentServerPolicy
+                type: StringList
+cloudWatch:
+  metricSets:
+    - regions:
+        - *HOME_REGION
+      deploymentTargets:
+        accounts:
+          - Management
+      metrics:
+        - filterName: SignInWithoutMFAFilter
+          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          filterPattern: '{ ($.eventName="ConsoleLogin") && ($.additionalEventData.MFAUsed !="Yes") && ($.userIdentity.arn!="arn:aws:sts::*:assumed-role/AWSReservedSSO_*") }'
+          metricNamespace: LogMetrics
+          metricName: SignInWithoutMFA
+          metricValue: '1'
+        - filterName: RootAccountUsageFilter
+          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
+          metricNamespace: LogMetrics
+          metricName: RootAccountUsage
+          metricValue: '1'
+        - filterName: CloudTrailChangesMetricFilter
+          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          filterPattern: '{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}'
+          metricNamespace: LogMetrics
+          metricName: CloudTrailChanges
+          metricValue: '1'
+        - filterName: DisableOrDeleteCMKMetricFilter
+          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          filterPattern: '{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}'
+          metricNamespace: LogMetrics
+          metricName: DisableOrDeleteCMK
+          metricValue: '1'
+        - filterName: AWSConfigChangesMetricFilter
+          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          filterPattern: '{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}'
+          metricNamespace: LogMetrics
+          metricName: AWSConfigChanges
+          metricValue: '1'
+        - filterName: Ec2LargeInstanceChangeMetricFilter
+          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          filterPattern: '{ (($.eventName = RunInstances) || ($.eventName = RebootInstances)|| ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName= TerminateInstances)) && (($.requestParameters.instanceType= *.32xlarge) || ($.requestParameters.instanceType= *.24xlarge) || ($.requestParameters.instanceType= *.18xlarge) || ($.requestParameters.instanceType= *.16xlarge) || ($.requestParameters.instanceType= *.12xlarge) || ($.requestParameters.instanceType= *.10xlarge) || ($.requestParameters.instanceType= *.9xlarge) || ($.requestParameters.instanceType= *.8xlarge) || ($.requestParameters.instanceType = *.4xlarge)) }'
+          metricNamespace: LogMetrics
+          metricName: EC2LargeInstanceEventCount
+          metricValue: '1'
+        - filterName: RootLoginEventCountFilter
+          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          filterPattern: '{($.eventName=ConsoleLogin) && ($.userIdentity.type=Root) && ($.responseElements.ConsoleLogin=Success)}'
+          metricNamespace: LogMetrics
+          metricName: RootLoginEventCount
+          metricValue: '1'
+        - filterName: BreakglassUserLoginMetricFilter
+          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          filterPattern: '{ $.userIdentity.type = "IAMUser" && ($.userIdentity.userName = "breakGlassUser01" || $.userIdentity.userName = "breakGlassUser02") && $.eventName = "ConsoleLogin" && $.responseElements.ConsoleLogin = "Success" }'
+          metricNamespace: LogMetrics
+          metricName: BreakglassUserLogin
+          metricValue: '1'
+  alarmSets:
+    - regions:
+        - *HOME_REGION
+      deploymentTargets:
+        accounts:
+          - Management
+      alarms:
+        - alarmName: CRITICAL_SignInWithoutMFA
+          alarmDescription: Alarm for console logins without mfa
+          snsTopicName: SecurityCritical
+          metricName: SignInWithoutMFA
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        - alarmName: CRITICAL_RootAccountUsage
+          alarmDescription: Alarm for usage of "root" account
+          snsTopicName: SecurityCritical
+          metricName: RootAccountUsage
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        - alarmName: MEDIUM_CloudTrailChanges
+          alarmDescription: Alarm for CloudTrail configuration changes
+          snsTopicName: SecurityMedium
+          metricName: CloudTrailChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        - alarmName: CRITICAL_DisableOrDeleteCMK
+          alarmDescription: Alarm for disabling or scheduled deletion of customer created CMKs
+          snsTopicName: SecurityCritical
+          metricName: DisableOrDeleteCMK
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        - alarmName: HIGH_AWSConfigChanges
+          alarmDescription: Alarm for AWS Config configuration changes
+          snsTopicName: SecurityHigh
+          metricName: AWSConfigChanges
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        - alarmName: MEDIUM_EC2LargeInstanceEventCount
+          alarmDescription: Alarms when one or more API calls are made to create, terminate, start, stop or reboot a 4x, 8x, 9x, 10x, 12x, 16x, 18x, 24x, 32x-large EC2 instance (in any account, any region of your AWS Organization).
+          snsTopicName: SecurityMedium
+          metricName: EC2LargeInstanceEventCount
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        - alarmName: CRITICAL_RootLoginEventCount
+          alarmDescription: Alarms when the root user successfully logs in one or more times (in any account, any region of your AWS Organization).
+          snsTopicName: SecurityHigh
+          metricName: RootLoginEventCount
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching
+        - alarmName: CRITICAL_BreakglassUserLogin
+          alarmDescription: Alarms when any breakglass user successfully logs into the Management account.
+          snsTopicName: SecurityCritical
+          metricName: BreakglassUserLogin
+          namespace: LogMetrics
+          comparisonOperator: GreaterThanOrEqualToThreshold
+          evaluationPeriods: 1
+          period: 300
+          statistic: Sum
+          threshold: 1
+          treatMissingData: notBreaching

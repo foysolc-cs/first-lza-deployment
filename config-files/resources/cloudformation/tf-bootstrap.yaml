@@ -1,0 +1,395 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This CloudFormation template will deploy the OIDC Provider and terraform state bucket for workload accounts.
+
+Parameters:
+  GitHubThumprint:
+    Type: CommaDelimitedList
+    Description: Server certificate thumbprint is the hex-encoded SHA-1 hash value of the X.509 certificate used by the domain where the OpenID Connect provider makes its keys available
+  GitHubOrganisation:
+    Type: String
+    Description: The GitHub Organisation name to trust
+  NoncurrentVersionExpirationDays:
+    Type: Number
+    Default: 30
+    Description: Number of days to retain noncurrent versions before expiration
+  PlatformPrefix:
+    Type: String
+    Description: The platform prefix used when deploying ELZ
+    Default: elz
+
+Resources:
+  Role:
+    Type: AWS::IAM::Role
+    DependsOn: WorkloadAutomationPolicy
+    Properties:
+      RoleName: workload-automation-iamrole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowRepositories
+            Effect: Allow
+            Action:
+              - sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated:
+                - !Ref GithubOidc
+            Condition:
+              ForAnyValue:StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrganisation}/*
+          - Sid: AllowAll
+            Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+      ManagedPolicyArns:
+        - !Ref WorkloadAutomationPolicy
+      PermissionsBoundary: !Ref WorkloadAutomationPolicy
+
+  WorkloadAutomationPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: workload-automation-iampolicy
+      Description: Policy for workload automation
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Action:
+              - cloudtrail:DeleteTrail*
+              - cloudtrail:StopLogging*
+              - cloudtrail:UpdateTrail*
+              - ec2:CreateVpc*
+              - guardduty:*
+              - iam:*User*
+              - iam:DeleteRolePermissionsBoundary
+            Resource: '*'
+          - Effect: Deny
+            Action:
+              - ssm:SendCommand
+            Resource: arn:aws:ec2::*:instance/*
+          - Effect: Allow
+            Action:
+              - acm-pca:*
+              - acm:*
+              - amplify:Get*
+              - amplify:List*
+              - apigateway:*
+              - appflow:*
+              - app-integrations:*
+              - application-autoscaling:*
+              - applicationinsights:*
+              - appmesh:*
+              - appsync:*
+              - athena:*
+              - autoscaling-plans:Describe*
+              - autoscaling-plans:GetScalingPlanResourceForecastData*
+              - autoscaling:*
+              - backup:CreateRestoreTestingPlan
+              - backup:CreateRestoreTestingSelection
+              - backup:DeleteRestoreTestingPlan
+              - backup:DeleteRestoreTestingSelection
+              - backup:TagResource
+              - backup:UpdateRestoreTestingPlan
+              - backup:UpdateRestoreTestingSelection
+              - backup:Describe*
+              - backup:Get*
+              - backup:List*
+              - backup:StartRestoreJob
+              - batch:Describe*
+              - batch:List*
+              - cloudformation:*
+              - cloudfront:*
+              - cloudsearch:Describe*
+              - cloudsearch:List*
+              - cloudtrail:Describe*
+              - cloudtrail:Get*
+              - cloudtrail:List*
+              - cloudtrail:LookupEvents
+              - cloudwatch:*
+              - codeartifact:*
+              - codebuild:*
+              - codecommit:*
+              - codedeploy:*
+              - codepipeline:*
+              - codestar-connections:*
+              - config:Delete*
+              - config:Deliver*
+              - config:Describe*
+              - config:Get*
+              - config:List*
+              - config:Tag*
+              - config:Untag*
+              - connect:*
+              - cur:*
+              - datapipeline:Describe*
+              - datapipeline:EvaluateExpression
+              - datapipeline:Get*
+              - datapipeline:List*
+              - datapipeline:QueryObjects
+              - datapipeline:Validate*
+              - datasync:*
+              - directconnect:Describe*
+              - dms:*
+              - ds:*
+              - dynamodb:*
+              - ec2:*
+              - ec2messages:*
+              - ecr:*
+              - ecs:*
+              - eks:*
+              - elasticache:*
+              - elasticbeanstalk:Check*
+              - elasticbeanstalk:Describe*
+              - elasticbeanstalk:List*
+              - elasticbeanstalk:Request*
+              - elasticbeanstalk:Retrieve*
+              - elasticbeanstalk:Validate*
+              - elasticfilesystem:*
+              - elasticloadbalancing:*
+              - elasticmapreduce:*
+              - elastictranscoder:List*
+              - elastictranscoder:Read*
+              - es:*
+              - events:*
+              - execute-api:*
+              - firehose:*
+              - fsx:*
+              - glacier:*
+              - globalaccelerator:Describe*
+              - globalaccelerator:List*
+              - glue:*
+              - guardduty:Get*
+              - guardduty:List*
+              - health:Describe*
+              - iam:CreateOpenIDConnectProvider
+              - iam:DeleteOpenIDConnectProvider
+              - iam:Get*
+              - iam:List*
+              - iam:Tag*
+              - iam:Untag*
+              - iam:UpdateOpenIDConnectProviderThumbprint
+              - importexport:Get*
+              - importexport:List*
+              - inspector:*
+              - inspector:Describe*
+              - inspector2:Get*
+              - inspector:List*
+              - inspector:Preview*
+              - kafka-cluster:*
+              - kafkaconnect:*
+              - kafka:*
+              - kinesis:*
+              - kinesisanalytics:*
+              - kinesisvideo:*
+              - kms:*
+              - lakeformation:*
+              - lambda:*
+              - lex:*
+              - lightsail:*
+              - logs:*
+              - mq:Describe*
+              - mq:List*
+              - organizations:Describe*
+              - organizations:List*
+              - profile:*
+              - quicksight:*
+              - rds-db:*
+              - rds:*
+              - redshift-data:*
+              - redshift:*
+              - resource-groups:*
+              - route53:ChangeResourceRecordSets
+              - route53:ChangeTagsForResource
+              - route53:Get*
+              - route53:List*
+              - route53:Test*
+              - route53domains:Check*
+              - route53domains:Get*
+              - route53domains:List*
+              - route53domains:View*
+              - s3:*
+              - sagemaker:*
+              - scheduler:*
+              - sdb:Get*
+              - sdb:List*
+              - sdb:Select*
+              - secretsmanager:*
+              - securityhub:Get*
+              - securityhub:List*
+              - serverlessrepo:Get*
+              - serverlessrepo:List*
+              - serverlessrepo:SearchApplications
+              - servicediscovery:Get*
+              - servicediscovery:List*
+              - servicequotas:Get*
+              - ses:Get*
+              - ses:List*
+              - shield:*
+              - sns:*
+              - sqs:*
+              - ssm:*
+              - ssmmessages:*
+              - states:*
+              - storagegateway:*
+              - sts:Get*
+              - sts:DecodeAuthorizationMessage
+              - swf:Count*
+              - swf:Describe*
+              - swf:Get*
+              - swf:List*
+              - synthetics:*
+              - tag:Get*
+              - transcribe:*
+              - transfer:Describe*
+              - transfer:List*
+              - transfer:TestIdentityProvider
+              - trustedadvisor:Describe*
+              - voiceid:*
+              - waf-regional:Get*
+              - waf-regional:List*
+              - wafv2:*
+              - workspaces:Describe*
+              - xray:*
+            Resource: '*'
+          # Allow the creation, modification and deletion of IAM roles but limit it to the local/ path in each account to
+          # identify them as Independent roles for this account only and to control what can be done by application teams
+          - Effect: Allow
+            Action:
+              - iam:*PermissionsBoundary
+              - iam:*Role
+              - iam:*RolePolicy
+              - iam:UpdateRoleDescription
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/local*"
+            # Allow Instance profiles to be created from these roles and restrict it to the local* path as well
+          - Effect: Allow
+            Action:
+              - iam:*InstanceProfile
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:instance-profile/local*"
+              # Only allow the passing of roles under local/ to services and for holders of this policy (as a boundary) to permit
+              # the assumption of the same roles
+          - Effect: Allow
+            Action:
+              - iam:PassRole
+              - sts:AssumeRole
+            Resource:
+              - arn:aws:iam::*:role/aws-service-role/*
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/local*"
+              - !Sub "arn:aws:iam::${AWS::AccountId}:role/EC2-Default-SSM-Role"
+          # Allow creation of service-linked roles for AWS services
+          - Effect: Allow
+            Action:
+              - iam:CreateServiceLinkedRole
+              - iam:DeleteServiceLinkedRole
+              - iam:GetServiceLinkedRoleDeletionStatus
+            Resource: '*'
+            # Allow the creation, modification and deletion of IAM policies but limit it to the local/ path in each account to
+            # identify them as independent policies for this account only and to control what can be done by application teams
+          - Effect: Allow
+            Action:
+              - iam:CreatePolicy
+              - iam:CreatePolicyVersion
+              - iam:DeletePolicy
+              - iam:DeletePolicyVersion
+              - iam:SetDefaultPolicyVersion
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:policy/local*"
+            # Deny attaching policies not created by the Application team to their IAM roles
+          - Effect: Deny
+            Action:
+              - iam:AttachRolePolicy
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/local*"
+            Condition:
+              ArnNotLike:
+                iam:PolicyARN: !Sub "arn:aws:iam::${AWS::AccountId}:policy/local*"
+            # Deny the creation of a role or putting a permission boundary on a role unless the permission boundary references
+            # this policy
+          - Effect: Deny
+            Action:
+              - iam:CreateRole
+              - iam:PutRolePermissionsBoundary
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/local*"
+            Condition:
+              StringNotEquals:
+                iam:PermissionsBoundary: !Sub "arn:aws:iam::${AWS::AccountId}:policy/workload-automation-iampolicy"
+            # Explicitly deny the modification of the automation policy by the application teams
+          - Effect: Deny
+            Action:
+              - iam:CreatePolicy*
+              - iam:DeletePolicy*
+              - iam:SetDefaultPolicyVersion
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:policy/workload-automation-iampolicy"
+
+  GithubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ThumbprintList:
+        - !Ref GitHubThumprint
+      ClientIdList:
+        - sts.amazonaws.com
+
+  TerraformStateBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Sub "{{resolve:ssm:/${PlatformPrefix}/kms/s3/key-arn}}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
+        IgnorePublicAcls: true
+      BucketName: !Sub "local-tf-state-${AWS::AccountId}-${AWS::Region}"
+      LoggingConfiguration:
+        DestinationBucketName: !Sub "${PlatformPrefix}-s3-access-logs-${AWS::AccountId}-${AWS::Region}"
+        LogFilePrefix: !Sub "local-tf-state-${AWS::AccountId}-${AWS::Region}"
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireNoncurrentVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: !Ref NoncurrentVersionExpirationDays
+          - Id: ExpireIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      Tags:
+        - Key: costcenter
+          Value: !Ref PlatformPrefix
+        - Key: elzvended
+          Value: 'True'
+        - Key: environment
+          Value: Platform
+
+  TerraformStateBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TerraformStateBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowOnlyCurrentAccountReadWrite
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !Sub "arn:aws:s3:::${TerraformStateBucket}/*"
+              - !GetAtt [TerraformStateBucket, Arn]
+          - Sid: EnforceTLS
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !Sub "arn:aws:s3:::${TerraformStateBucket}/*"
+              - !GetAtt [TerraformStateBucket, Arn]
+            Condition:
+              Bool:
+                aws:SecureTransport: false

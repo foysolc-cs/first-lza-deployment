@@ -1,0 +1,234 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "RUL",
+      "Effect": "Deny",
+      "Action": [
+        "config:DeleteConfigRule",
+        "config:DeleteEvaluationResults",
+        "config:PutConfigRule",
+        "config:TagResource",
+        "config:UntagResource"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Accelerator": "${ACCELERATOR_PREFIX}"
+        },
+         "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "TAG1",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AuthorizeSecurityGroup*",
+        "ec2:CreateTags",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DeleteTags",
+        "ec2:ModifySecurityGroup*",
+        "ec2:RevokeSecurityGroup*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "ec2:ResourceTag/Accelerator": "${ACCELERATOR_PREFIX}"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "TAG2",
+      "Effect": "Deny",
+      "NotAction": [
+        "iam:GetInstanceProfile",
+        "iam:GetLoginProfile",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfiles",
+        "iam:ListInstanceProfilesForRole",
+        "iam:ListRolePolicies",
+        "iam:ListRoles",
+        "iam:PassRole",
+        "sts:AssumeRole"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "iam:ResourceTag/Accelerator": "${ACCELERATOR_PREFIX}"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "S33",
+      "Effect": "Deny",
+      "Action": [
+        "s3:Delete*",
+        "s3:PutBucketLogging",
+        "s3:PutBucketPolicy",
+        "s3:PutBucketVersioning",
+        "s3:PutEncryptionConfig*",
+        "s3:PutLifecycleConfig*",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutReplicationConfig*",
+        "s3:ReplicateDelete"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:s3:::${ACCELERATOR_PREFIX}*",
+        "arn:${PARTITION}:s3:::cdk-accel-*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "SEC",
+      "Effect": "Deny",
+      "Action": [
+        "access-analyzer:DeleteAnalyzer",
+        "ds:AcceptSharedDir*",
+        "ds:DisableSso",
+        "ds:EnableSso",
+        "ds:ShareDir*",
+        "ds:UnshareDirectory",
+        "ec2:CreateDefaultVpc",
+        "ec2:DisableEbsEncryptionByDefault",
+        "ec2:ModifyEbsDefaultKmsKeyId",
+        "fms:Disassociate*",
+        "guardduty:AcceptInvitation",
+        "guardduty:CreateMembers",
+        "guardduty:DeclineInvitations",
+        "guardduty:DeleteDetector",
+        "guardduty:DeleteInvitations",
+        "guardduty:DeleteIPSet",
+        "guardduty:DeleteMembers",
+        "guardduty:DeleteThreatIntelSet",
+        "guardduty:DisableOrganizationAdminAccount",
+        "guardduty:DisassociateFromMasterAccount",
+        "guardduty:DisassociateMembers",
+        "guardduty:InviteMembers",
+        "guardduty:StopMonitoringMembers",
+        "guardduty:UpdateDetector",
+        "guardduty:UpdateFindingsFeedback",
+        "guardduty:UpdateOrganizationConfiguration",
+        "guardduty:UpdatePublishingDestination",
+        "macie2:AcceptInvitation",
+        "macie2:CreateInvitations",
+        "macie2:CreateMember",
+        "macie2:DeclineInvitations",
+        "macie2:DeleteInvitations",
+        "macie2:DeleteMember",
+        "macie2:DisableMacie",
+        "macie2:DisableOrganizationAdminAccount",
+        "macie2:Disassociate*",
+        "macie2:Enable*",
+        "macie2:UpdateMacieSession",
+        "macie2:UpdateMemberSession",
+        "macie2:UpdateOrganizationConfiguration",
+        "ram:AcceptResourceShareInv*",
+        "ram:AssociateResourceShare",
+        "ram:CreateResourceShare",
+        "ram:Delete*",
+        "ram:Disassociate*",
+        "ram:EnableSharingWithAwsOrg*",
+        "ram:Update*",
+        "s3:PutAccountPublicAccessBlock",
+        "securityhub:BatchDisableStandards",
+        "securityhub:CreateMembers",
+        "securityhub:DisableImportFindingsForProduct",
+        "securityhub:DeclineInvitations",
+        "securityhub:DeleteActionTarget",
+        "securityhub:DeleteInsight",
+        "securityhub:DeleteMembers",
+        "securityhub:DisableSecurityHub",
+        "securityhub:Disassociate*",
+        "securityhub:EnableSecurityHub",
+        "securityhub:InviteMembers",
+        "securityhub:UpdateSecurityHubConfiguration",
+        "securityhub:UpdateStandardsControl"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "SNS",
+      "Effect": "Deny",
+      "Action": [
+        "sns:AddPermission",
+        "sns:CreateTopic",
+        "sns:DeleteTopic",
+        "sns:RemovePermission",
+        "sns:SetTopicAttributes",
+        "sns:Subscribe",
+        "sns:Unsubscribe"
+      ],
+      "Resource": "arn:aws:sns:*:*:${ACCELERATOR_PREFIX}*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "SSM",
+      "Effect": "Deny",
+      "Action": [
+        "ssm:CreateDoc*",
+        "ssm:DeleteDoc*",
+        "ssm:DeleteParam*",
+        "ssm:DeleteResourceDataSync",
+        "ssm:PutParameter",
+        "ssm:UpdateDoc*"
+      ],
+      "Resource": [
+        "arn:${PARTITION}:ssm:*:*:parameter/accelerator/*",
+        "arn:${PARTITION}:ssm:*:*:parameter/${ACCELERATOR_PREFIX}/*",
+        "arn:${PARTITION}:ssm:*:*:document/${ACCELERATOR_PREFIX}*",
+        "arn:${PARTITION}:ssm:*:*:document/SSM-SessionManagerRunShell",
+        "arn:${PARTITION}:ssm:*:*:resource-data-sync/${ACCELERATOR_PREFIX}*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    }
+  ]
+}

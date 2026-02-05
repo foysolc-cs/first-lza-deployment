@@ -1,0 +1,113 @@
+{
+  "root": [
+    {
+      "Id": "123456789012",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/123456789012",
+      "Email": "Awsresellerenduseruk453@ingrammicro.com",
+      "Name": "Management",
+      "Status": "ACTIVE",
+      "JoinedMethod": "INVITED"
+    }
+  ],
+  "SharedServices": [
+    {
+      "Id": "111111111111",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/111111111111",
+      "Email": "generic.email+lza12-sharedservices@cloudscaler.co.uk",
+      "Name": "SharedServices",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ],
+  "Closed": [],
+  "NetworkServices": [
+    {
+      "Id": "222222222222",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/222222222222",
+      "Email": "generic.email+lza12-networkservices@cloudscaler.co.uk",
+      "Name": "NetworkServices",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ],
+  "Backups": [
+    {
+      "Id": "333333333333",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/333333333333",
+      "Email": "generic.email+lza12-backups@cloudscaler.co.uk",
+      "Name": "Backups",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ],
+  "Sandbox": [
+    {
+      "Id": "444444444444",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/444444444444",
+      "Email": "generic.email+lza12-testsandbox@cloudscaler.co.uk",
+      "Name": "TestSandbox",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ],
+  "Workloads": [],
+  "Workloads/Pre": [
+    {
+      "Id": "555555555555",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/555555555555",
+      "Email": "danyal.hussain+lza12-testpreworkload@cloudscaler.co.uk",
+      "Name": "TestPreWorkload",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ],
+  "Workloads/Dev": [
+    {
+      "Id": "666666666666",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/666666666666",
+      "Email": "generic.email+lza12-testworkload@cloudscaler.co.uk",
+      "Name": "TestWorkload",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ],
+  "Workloads/Pro": [
+    {
+      "Id": "777777777777",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/777777777777",
+      "Email": "generic.email+lza12-testworkloadpro@cloudscaler.co.uk",
+      "Name": "TestProdWorkload",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ],
+  "PolicyStaging": [
+    {
+      "Id": "888888888888",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/888888888888",
+      "Email": "generic.email+lza12-policydevelopment@cloudscaler.co.uk",
+      "Name": "PolicyDevelopment",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ],
+  "Quarantine": [],
+  "SecurityServices": [
+    {
+      "Id": "999999999999",
+      "Arn": "arn:aws:organizations::123456789012:account/o-abc9sebl04/999999999999",
+      "Email": "generic.email+lza12-logarchive@cloudscaler.co.uk",
+      "Name": "LogArchive",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    },
+    {
+      "Id": "000000000000",
+      "Arn": "arn:aws:organizations::000000000000:account/o-abc9sebl04/851725425996",
+      "Email": "generic.email+lza12-audit@cloudscaler.co.uk",
+      "Name": "Audit",
+      "Status": "ACTIVE",
+      "JoinedMethod": "CREATED"
+    }
+  ]
+}

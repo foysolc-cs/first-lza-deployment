@@ -1,0 +1,303 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ACC",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreateAccountAlias",
+        "iam:DeleteAccountAlias",
+        "iam:DeleteAccountPasswordPolicy",
+        "iam:UpdateAccountPasswordPolicy"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "CFT",
+      "Effect": "Deny",
+      "Action": [
+        "cloudfront:Associate*",
+        "cloudfront:Create*",
+        "cloudfront:Delete*",
+        "cloudfront:Describe*",
+        "cloudfront:Get*",
+        "cloudfront:List*",
+        "cloudfront:Publish*",
+        "cloudfront:Test*",
+        "cloudfront:Update*",
+        "elasticloadbalancing:*",
+        "es:*",
+        "redshift:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EBS",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AttachVolume",
+        "ec2:CreateSnapshot*",
+        "ec2:CreateVolume",
+        "ec2:RunInstances"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "ec2:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "EFS",
+      "Effect": "Deny",
+      "Action": [
+        "elasticfilesystem:CreateFileSystem"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "elasticfilesystem:Encrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "GBL",
+      "Effect": "Deny",
+      "NotAction": [
+        "a4b:*",
+        "access-analyzer:*",
+        "account:*",
+        "acm:*",
+        "activate:*",
+        "artifact:*",
+        "aws-marketplace-management:*",
+        "aws-marketplace:*",
+        "aws-portal:*",
+        "billing:*",
+        "billingconductor:*",
+        "budgets:*",
+        "ce:*",
+        "chatbot:*",
+        "chime:*",
+        "cloudfront:*",
+        "cloudtrail:LookupEvents",
+        "cloudwatch:GetMetricData",
+        "compute-optimizer:*",
+        "config:*",
+        "consoleapp:*",
+        "consolidatedbilling:*",
+        "cost-optimization-hub:*",
+        "cur:*",
+        "datapipeline:GetAccountLimits",
+        "devicefarm:*",
+        "directconnect:*",
+        "ec2:DescribeRegions",
+        "ec2:DescribeTransitGateways",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeVpnGateways",
+        "fms:*",
+        "freetier:*",
+        "globalaccelerator:*",
+        "health:*",
+        "iam:*",
+        "importexport:*",
+        "invoicing:*",
+        "kms:*",
+        "license-manager:ListReceivedLicenses",
+        "lightsail:Get*",
+        "mobileanalytics:*",
+        "networkmanager:*",
+        "notifications-contacts:*",
+        "notifications:*",
+        "organizations:*",
+        "payments:*",
+        "pricing:*",
+        "purchase-orders:*",
+        "quicksight:DescribeAccountSubscription",
+        "resource-explorer-2:*",
+        "route53-recovery-cluster:*",
+        "route53-recovery-control-config:*",
+        "route53-recovery-readiness:*",
+        "route53:*",
+        "route53domains:*",
+        "s3:CreateMultiR*",
+        "s3:DeleteMultiR*",
+        "s3:DescribeMultiR*",
+        "s3:GetAccountPublic*",
+        "s3:GetBucketLocation",
+        "s3:GetMultiR*",
+        "s3:GetStorageLens*",
+        "s3:ListAllMyBuckets",
+        "s3:ListMultiR*",
+        "s3:ListStorageLens*",
+        "s3:PutAccountPublic*",
+        "s3:PutMultiR*",
+        "savingsplans:*",
+        "secretsmanager:*",
+        "servicequotas:*",
+        "shield:*",
+        "sns:Publish",
+        "sso:*",
+        "sts:*",
+        "support:*",
+        "supportapp:*",
+        "supportplans:*",
+        "sustainability:*",
+        "tag:GetResources",
+        "tax:*",
+        "trustedadvisor:*",
+        "waf-regional:*",
+        "waf:*",
+        "wafv2:*",
+        "wellarchitected:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": "${HOME_REGION}"
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "GBL2",
+      "Effect": "Deny",
+      "Action": ["acm:*", "kms:*", "sns:Publish"],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:RequestedRegion": [
+            "${HOME_REGION}",
+            "us-east-1"
+          ]
+        },
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NET",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:CreateEgressOnlyInternetGateway",
+        "ec2:CreateInternetGateway"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "RDS",
+      "Effect": "Deny",
+      "Action": "rds:*",
+      "Resource": "*",
+      "Condition": {
+        "ForAnyValue:StringEquals": {
+          "rds:DatabaseEngine": [
+            "mariadb",
+            "mysql",
+            "oracle-ee",
+            "oracle-se",
+            "oracle-se1",
+            "oracle-se2",
+            "postgres",
+            "sqlserver-ee",
+            "sqlserver-se",
+            "sqlserver-web"
+          ]
+        },
+        "Bool": {
+          "rds:StorageEncrypted": "false"
+        }
+      }
+    },
+    {
+      "Sid": "ROOT",
+      "Effect": "Deny",
+      "NotAction": [
+        "account:*",
+        "aws-portal:ViewBilling",
+        "billing:UpdateIAMAccessPreference",
+        "ec2:CreateReservedInstancesListing",
+        "iam:CreateVirtualMFADevice",
+        "iam:DeleteVirtualMFADevice",
+        "iam:EnableMFADevice",
+        "iam:GetUser",
+        "iam:ListMFADevices",
+        "iam:ListVirtualMFADevices",
+        "iam:ResyncMFADevice",
+        "iam:UpdateAccountName*",
+        "iam:UpdateAssumeRolePolicy",
+        "organizations:CloseAccount",
+        "organizations:CreateGovCloudAccount",
+        "s3:*",
+        "sqs:*",
+        "sts:GetSessionToken",
+        "support:*",
+        "trustedadvisor:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "aws:PrincipalArn": "arn:aws:iam::*:root"
+        }
+      }
+    },
+    {
+      "Sid": "S31",
+      "Effect": "Deny",
+      "Action": "s3:*",
+      "Resource": "*",
+      "Condition": {
+        "Bool": {
+          "aws:SecureTransport": "false"
+        }
+      }
+    },
+    {
+      "Sid": "S32",
+      "Effect": "Deny",
+      "Action": "s3:PutObject",
+      "Resource": "*",
+      "Condition": {
+        "StringNotLike": {
+          "s3:x-amz-server-side-encryption": [
+            "aws:kms",
+            "AES256"
+          ]
+        },
+        "Null": {
+          "s3:x-amz-server-side-encryption": "false"
+        }
+      }
+    }
+  ]
+}

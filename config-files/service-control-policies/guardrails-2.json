@@ -1,0 +1,230 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "KMS",
+      "Effect": "Deny",
+      "Action": [
+        "kms:CancelKeyDeletion",
+        "kms:DeleteAlias",
+        "kms:Disable*",
+        "kms:PutKeyPolicy",
+        "kms:ScheduleKeyDeletion",
+        "kms:UpdateAlias",
+        "kms:UpdateKeyDescription"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        },
+        "ForAnyValue:StringLike": {
+          "kms:ResourceAliases": [
+            "alias/${ACCELERATOR_PREFIX}/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "LAM",
+      "Effect": "Deny",
+      "Action": [
+        "lambda:AddPermission",
+        "lambda:CreateEventSourceMapping",
+        "lambda:CreateFunction",
+        "lambda:DeleteEventSourceMapping",
+        "lambda:DeleteFunction",
+        "lambda:DeleteFunctionConcurrency",
+        "lambda:InvokeFunction",
+        "lambda:PutFunctionConcurrency",
+        "lambda:RemovePermission",
+        "lambda:UpdateEventSourceMapping",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:UpdateFunctionUrlConfig"
+      ],
+      "Resource": "arn:aws:lambda:*:*:function:${ACCELERATOR_PREFIX}*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "LOG1",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:DeleteFlowLogs",
+        "logs:AssociateKmsKey",
+        "logs:DeleteA*",
+        "logs:DeleteD*",
+        "logs:DeleteI*",
+        "logs:DeleteLogD*",
+        "logs:DeleteLogGroup",
+        "logs:DeleteR*",
+        "logs:DisassociateKmsKey",
+        "logs:PutAccountPolicy",
+        "logs:PutDestination*"
+      ],
+      "Resource": [
+        "arn:aws:logs:*:*:log-group:aws-accelerator-*",
+        "arn:${PARTITION}:logs:*:*:log-group:*${ACCELERATOR_PREFIX}*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NET2",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:AcceptTransitGateway*",
+        "ec2:AcceptVpc*",
+        "ec2:AllocateAddress",
+        "ec2:AssociateAddress",
+        "ec2:AssociateClientVpn*",
+        "ec2:AttachInternetGateway",
+        "ec2:AttachVpnGateway",
+        "ec2:AuthorizeClientVpn*",
+        "ec2:CreateCarrierGateway",
+        "ec2:CreateClientVpn*",
+        "ec2:CreateCustomerGateway",
+        "ec2:CreateEgressOnlyInternetGateway",
+        "ec2:CreateInternetGateway",
+        "ec2:CreateNatGateway",
+        "ec2:CreateTransitGateway*",
+        "ec2:CreateVpc",
+        "ec2:CreateVpcEndpoint",
+        "ec2:CreateVpcPeeringConnection",
+        "ec2:CreateVpn*",
+        "ec2:DeleteClientVpn*",
+        "ec2:DeleteNetworkAcl*",
+        "ec2:ModifyClientVpn*",
+        "ec2:ModifyVpn*",
+        "ec2:RevokeClientVpn*",
+        "elasticmapreduce:PutBlockPublic*",
+        "globalaccelerator:Create*",
+        "globalaccelerator:Update*",
+        "iam:AddUserToGroup",
+        "iam:CreateAccessKey",
+        "iam:CreateGroup",
+        "iam:CreateUser",
+        "iam:DeleteGroup",
+        "iam:DeleteRolePermissionsBoundary",
+        "iam:DeleteUser",
+        "iam:TagUser",
+        "iam:UpdateGroup",
+        "iam:UpdateUser",
+        "networkmanager:Associate*",
+        "networkmanager:Create*",
+        "networkmanager:Deregister*",
+        "networkmanager:Disassociate*",
+        "networkmanager:Register*",
+        "networkmanager:Update*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NET3",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:ModifySnapshotAttribute",
+        "rds:ModifyDBClusterSnapshotAttribute",
+        "rds:ModifyDBSnapshotAttribute"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/backup-cross-account-role",
+            "arn:${PARTITION}:iam::*:role/elz-aws-managed-backup-role"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "OTH",
+      "Effect": "Deny",
+      "Action": [
+        "account:C*",
+        "account:D*",
+        "account:E*",
+        "account:GetAl*",
+        "account:GetC*",
+        "account:GetR*",
+        "account:L*",
+        "account:P*",
+        "appflow:*",
+        "gamelift:*",
+        "iq:*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ORG",
+      "Effect": "Deny",
+      "Action": [
+        "organizations:CloseAccount",
+        "organizations:LeaveOrganization"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "PMP",
+      "Effect": "Deny",
+      "Action": [
+        "aws-marketplace:As*",
+        "aws-marketplace:CreateP*",
+        "aws-marketplace:DescribePri*",
+        "aws-marketplace:Di*",
+        "aws-marketplace:ListP*"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnNotLike": {
+          "aws:PrincipalARN": [
+            "arn:aws:iam::*:role/${ACCELERATOR_PREFIX}*",
+            "arn:aws:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    }
+  ]
+}

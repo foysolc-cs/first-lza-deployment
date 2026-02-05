@@ -1,0 +1,957 @@
+homeRegion: &HOME_REGION eu-west-2
+defaultVpc:
+  delete: true
+  excludeAccounts: []
+
+transitGateways: [] # REMOVE SQUARE BRACKETS WHEN THE CONFIG BELOW IS COMMENTED OUT
+#   - name: tgw-id
+#     account: NetworkServices
+#     region: *HOME_REGION
+#     shareTargets:
+#       organizationalUnits:
+#         - NetworkServices
+#         - Workloads
+#     asn: 65521
+#     dnsSupport: enable
+#     vpnEcmpSupport: enable
+#     defaultRouteTableAssociation: disable
+#     defaultRouteTablePropagation: disable
+#     autoAcceptSharingAttachments: enable
+#     routeTables:
+#       - name: tgrt-core
+#         routes:
+#           - destinationCidrBlock: 172.20.0.0/22
+#             attachment:
+#               account: NetworkServices
+#               vpcName: vpc-endpoints
+#           - destinationCidrBlock: 0.0.0.0/0
+#             attachment:
+#               account: NetworkServices
+#               vpcName: vpc-inspection
+#       - name: tgrt-untrusted
+#         routes:
+#           - destinationCidrBlock: 10.0.0.0/8
+#             blackhole: true
+#           - destinationCidrBlock: 0.0.0.0/0
+#             attachment:
+#               account: NetworkServices
+#               vpcName: vpc-inspection
+#       - name: tgrt-segregated
+#         routes:
+#           - destinationCidrBlock: 172.20.0.0/22
+#             attachment:
+#               account: NetworkServices
+#               vpcName: vpc-endpoints
+#           - destinationCidrBlock: 10.0.0.0/8
+#             blackhole: true
+#           - destinationCidrBlock: 0.0.0.0/0
+#             attachment:
+#               account: NetworkServices
+#               vpcName: vpc-inspection
+#       - name: tgrt-firewall
+#         routes:
+#           - destinationCidrBlock: 0.0.0.0/0
+#             attachment:
+#               account: NetworkServices
+#               vpcName: vpc-egress
+#           - destinationCidrBlock: 172.22.0.0/24
+#             attachment:
+#               account: NetworkServices
+#               vpcName: vpc-ingress
+
+# centralNetworkServices:
+#   delegatedAdminAccount: NetworkServices
+#   networkFirewall:
+#     firewalls:
+#       - name: inspection-nfw
+#         region: *HOME_REGION
+#         firewallPolicy: inspection-nfw-policy
+#         subnets:
+#           - sn-nfw-a
+#           - sn-nfw-b
+#           - sn-nfw-c
+#         vpc: vpc-inspection
+#         loggingConfiguration:
+#           - destination: s3
+#             type: FLOW
+#           - destination: cloud-watch-logs
+#             type: ALERT
+#     policies:
+#       - name: inspection-nfw-policy
+#         regions:
+#           - *HOME_REGION
+#         firewallPolicy:
+#           statelessDefaultActions: [aws:forward_to_sfe]
+#           statelessFragmentDefaultActions: [aws:forward_to_sfe]
+#           statelessRuleGroups:
+#             - name: inspection-nfw-stateless-group
+#               priority: 100
+#         shareTargets:
+#           organizationalUnits:
+#             - NetworkServices
+#     rules:
+#       - name: inspection-nfw-stateless-group
+#         regions:
+#           - *HOME_REGION
+#         capacity: 100
+#         type: STATELESS
+#         ruleGroup:
+#           rulesSource:
+#             statelessRulesAndCustomActions:
+#               statelessRules:
+#                 - priority: 100
+#                   ruleDefinition:
+#                     actions: [aws:pass]
+#                     matchAttributes:
+#                       sources:
+#                         - 0.0.0.0/0
+#                       destinations:
+#                         - 0.0.0.0/0
+#         shareTargets:
+#           organizationalUnits:
+#             - NetworkServices
+
+endpointPolicies:
+  - name: Default
+    document: vpc-endpoint-policies/default.json
+
+vpcs: [] # REMOVE SQUARE BRACKETS WHEN THE CONFIG BELOW IS COMMENTED OUT
+  # - name: vpc-endpoints
+  #   account: NetworkServices
+  #   region: *HOME_REGION
+  #   cidrs:
+  #     - 172.20.0.0/22
+  #   defaultSecurityGroupRulesDeletion: true
+  #   internetGateway: false
+  #   enableDnsHostnames: true
+  #   enableDnsSupport: true
+  #   instanceTenancy: default
+  #   routeTables:
+  #     - name: rt-endpoints-private
+  #       routes:
+  #         - name: Local
+  #           destination: 172.20.0.0/22
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: transitGateway
+  #           target: tgw-id
+  #         - name: S3Gateway
+  #           type: gatewayEndpoint
+  #           target: s3
+  #         - name: DynamoDBGateway
+  #           type: gatewayEndpoint
+  #           target: dynamodb
+  #     - name: rt-endpoints-tgw
+  #       routes:
+  #         - name: Local
+  #           destination: 172.20.0.0/22
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: transitGateway
+  #           target: tgw-id
+  #   subnets:
+  #     - name: sn-endpoints-private-a
+  #       availabilityZone: a
+  #       routeTable: rt-endpoints-private
+  #       ipv4CidrBlock: 172.20.1.0/24
+  #     - name: sn-endpoints-private-b
+  #       availabilityZone: b
+  #       routeTable: rt-endpoints-private
+  #       ipv4CidrBlock: 172.20.2.0/24
+  #     - name: sn-endpoints-private-c
+  #       availabilityZone: c
+  #       routeTable: rt-endpoints-private
+  #       ipv4CidrBlock: 172.20.3.0/24
+  #     - name: sn-endpoints-tgw-a
+  #       availabilityZone: a
+  #       routeTable: rt-endpoints-tgw
+  #       ipv4CidrBlock: 172.20.0.0/28
+  #     - name: sn-endpoints-tgw-b
+  #       availabilityZone: b
+  #       routeTable: rt-endpoints-tgw
+  #       ipv4CidrBlock: 172.20.0.16/28
+  #     - name: sn-endpoints-tgw-c
+  #       availabilityZone: c
+  #       routeTable: rt-endpoints-tgw
+  #       ipv4CidrBlock: 172.20.0.32/28
+  #   transitGatewayAttachments:
+  #     - name: tga-endpoints
+  #       transitGateway:
+  #         name: tgw-id
+  #         account: NetworkServices
+  #       routeTableAssociations:
+  #         - tgrt-firewall
+  #       routeTablePropagations: []
+  #       subnets:
+  #         - sn-endpoints-tgw-a
+  #         - sn-endpoints-tgw-b
+  #         - sn-endpoints-tgw-c
+  #       options:
+  #         applianceModeSupport: enable
+  #   gatewayEndpoints:
+  #     defaultPolicy: Default
+  #     endpoints:
+  #       - service: s3
+  #       - service: dynamodb
+  #   interfaceEndpoints:
+  #     allowedCidrs:
+  #       - 10.0.0.0/8
+  #     central: true
+  #     defaultPolicy: Default
+  #     subnets:
+  #       - sn-endpoints-private-a
+  #       - sn-endpoints-private-b
+  #       - sn-endpoints-private-c
+  #     endpoints:
+  #       - service: ec2
+  #       - service: ec2messages
+  #       - service: kms
+  #       - service: logs
+  #       - service: ssm
+  #       - service: ssmmessages
+  #   networkAcls:
+  #     - name: nacl-endpoint-private
+  #       subnetAssociations:
+  #         - sn-endpoints-private-a
+  #         - sn-endpoints-private-b
+  #         - sn-endpoints-private-c
+  #       inboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #       outboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 0.0.0.0/0
+  #     - name: nacl-endpoint-tgw
+  #       subnetAssociations:
+  #         - sn-endpoints-tgw-a
+  #         - sn-endpoints-tgw-b
+  #         - sn-endpoints-tgw-c
+  #       inboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #       outboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 0.0.0.0/0
+
+  # - name: vpc-egress
+  #   account: NetworkServices
+  #   region: *HOME_REGION
+  #   cidrs:
+  #     - 172.21.0.0/24
+  #   defaultSecurityGroupRulesDeletion: true
+  #   internetGateway: true
+  #   enableDnsHostnames: true
+  #   enableDnsSupport: true
+  #   instanceTenancy: default
+  #   routeTables:
+  #     - name: rt-egress-tgw-a
+  #       routes:
+  #         - name: Local
+  #           destination: 172.21.0.0/24
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 10.0.0.0/8
+  #           type: transitGateway
+  #           target: tgw-id
+  #         - name: NgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: natGateway
+  #           target: ngw-egress-a
+  #     - name: rt-egress-tgw-b
+  #       routes:
+  #         - name: Local
+  #           destination: 172.21.0.0/24
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 10.0.0.0/8
+  #           type: transitGateway
+  #           target: tgw-id
+  #         - name: NgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: natGateway
+  #           target: ngw-egress-b
+  #     - name: rt-egress-tgw-c
+  #       routes:
+  #         - name: Local
+  #           destination: 172.21.0.0/24
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 10.0.0.0/8
+  #           type: transitGateway
+  #           target: tgw-id
+  #         - name: NgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: natGateway
+  #           target: ngw-egress-c
+  #     - name: rt-egress-public
+  #       routes:
+  #         - name: Local
+  #           destination: 172.21.0.0/24
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 10.0.0.0/8
+  #           type: transitGateway
+  #           target: tgw-id
+  #         - name: IgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: internetGateway
+  #           target: ig-id
+  #   subnets:
+  #     - name: sn-egress-tgw-a
+  #       availabilityZone: a
+  #       routeTable: rt-egress-tgw-a
+  #       ipv4CidrBlock: 172.21.0.0/28
+  #     - name: sn-egress-tgw-b
+  #       availabilityZone: b
+  #       routeTable: rt-egress-tgw-b
+  #       ipv4CidrBlock: 172.21.0.16/28
+  #     - name: sn-egress-tgw-c
+  #       availabilityZone: c
+  #       routeTable: rt-egress-tgw-c
+  #       ipv4CidrBlock: 172.21.0.32/28
+  #     - name: sn-egress-public-a
+  #       availabilityZone: a
+  #       routeTable: rt-egress-public
+  #       ipv4CidrBlock: 172.21.0.64/28
+  #     - name: sn-egress-public-b
+  #       availabilityZone: b
+  #       routeTable: rt-egress-public
+  #       ipv4CidrBlock: 172.21.0.80/28
+  #     - name: sn-egress-public-c
+  #       availabilityZone: c
+  #       routeTable: rt-egress-public
+  #       ipv4CidrBlock: 172.21.0.96/28
+  #   natGateways:
+  #     - name: ngw-egress-a
+  #       subnet: sn-egress-public-a
+  #     - name: ngw-egress-b
+  #       subnet: sn-egress-public-b
+  #     - name: ngw-egress-c
+  #       subnet: sn-egress-public-c
+  #   transitGatewayAttachments:
+  #     - name: tga-egress
+  #       transitGateway:
+  #         name: tgw-id
+  #         account: NetworkServices
+  #       routeTableAssociations:
+  #         - tgrt-core
+  #       routeTablePropagations: []
+  #       subnets:
+  #         - sn-egress-tgw-a
+  #         - sn-egress-tgw-b
+  #         - sn-egress-tgw-c
+  #       options:
+  #         applianceModeSupport: enable
+  #   networkAcls:
+  #     - name: nacl-egress-public
+  #       subnetAssociations:
+  #         - sn-egress-public-a
+  #         - sn-egress-public-b
+  #         - sn-egress-public-c
+  #       inboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #       outboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 0.0.0.0/0
+  #     - name: nacl-egress-tgw
+  #       subnetAssociations:
+  #         - sn-egress-tgw-a
+  #         - sn-egress-tgw-b
+  #         - sn-egress-tgw-c
+  #       inboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #       outboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 0.0.0.0/0
+
+  # - name: vpc-ingress
+  #   account: NetworkServices
+  #   region: *HOME_REGION
+  #   cidrs:
+  #     - 172.22.0.0/24
+  #   defaultSecurityGroupRulesDeletion: true
+  #   internetGateway: true
+  #   enableDnsHostnames: true
+  #   enableDnsSupport: true
+  #   instanceTenancy: default
+  #   routeTables:
+  #     - name: rt-ingress-tgw
+  #       routes:
+  #         - name: Local
+  #           destination: 172.22.0.0/24
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 10.0.0.0/8
+  #           type: transitGateway
+  #           target: tgw-id
+  #     - name: rt-ingress-public
+  #       routes:
+  #         - name: Local
+  #           destination: 172.22.0.0/24
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 10.0.0.0/8
+  #           type: transitGateway
+  #           target: tgw-id
+  #         - name: IgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: internetGateway
+  #           target: ig-id
+  #   subnets:
+  #     - name: sn-ingress-tgw-a
+  #       availabilityZone: a
+  #       routeTable: rt-ingress-tgw
+  #       ipv4CidrBlock: 172.22.0.0/28
+  #     - name: sn-ingress-tgw-b
+  #       availabilityZone: b
+  #       routeTable: rt-ingress-tgw
+  #       ipv4CidrBlock: 172.22.0.16/28
+  #     - name: sn-ingress-tgw-c
+  #       availabilityZone: c
+  #       routeTable: rt-ingress-tgw
+  #       ipv4CidrBlock: 172.22.0.32/28
+  #     - name: sn-ingress-public-a
+  #       availabilityZone: a
+  #       routeTable: rt-ingress-public
+  #       ipv4CidrBlock: 172.22.0.64/28
+  #     - name: sn-ingress-public-b
+  #       availabilityZone: b
+  #       routeTable: rt-ingress-public
+  #       ipv4CidrBlock: 172.22.0.80/28
+  #     - name: sn-ingress-public-c
+  #       availabilityZone: c
+  #       routeTable: rt-ingress-public
+  #       ipv4CidrBlock: 172.22.0.96/28
+  #   transitGatewayAttachments:
+  #     - name: tga-ingress
+  #       transitGateway:
+  #         name: tgw-id
+  #         account: NetworkServices
+  #       routeTableAssociations:
+  #         - tgrt-core
+  #       routeTablePropagations: []
+  #       subnets:
+  #         - sn-ingress-tgw-a
+  #         - sn-ingress-tgw-b
+  #         - sn-ingress-tgw-c
+  #       options:
+  #         applianceModeSupport: enable
+  #   networkAcls:
+  #     - name: nacl-ingress-public
+  #       subnetAssociations:
+  #         - sn-ingress-public-a
+  #         - sn-ingress-public-b
+  #         - sn-ingress-public-c
+  #       inboundRules:
+  #         - rule: 100
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 10.0.0.0/8
+  #         - rule: 200
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 172.0.0.0/8
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 80
+  #           toPort: 80
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: 6
+  #           fromPort: 443
+  #           toPort: 443
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #         - rule: 500
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 600
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #       outboundRules:
+  #         - rule: 100
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 10.0.0.0/8
+  #         - rule: 200
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 172.0.0.0/8
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 1024
+  #           toPort: 65535
+  #           action: allow
+  #           destination: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: 6
+  #           fromPort: 80
+  #           toPort: 80
+  #           action: allow
+  #           destination: 0.0.0.0/0
+  #         - rule: 500
+  #           protocol: 6
+  #           fromPort: 443
+  #           toPort: 443
+  #           action: allow
+  #           destination: 0.0.0.0/0
+  #         - rule: 600
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 700
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #     - name: nacl-ingress-tgw
+  #       subnetAssociations:
+  #         - sn-ingress-tgw-a
+  #         - sn-ingress-tgw-b
+  #         - sn-ingress-tgw-c
+  #       inboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #       outboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 0.0.0.0/0
+  #   securityGroups:
+  #     - name: ingress-alb-sg
+  #       description: Application load balancer security group
+  #       inboundRules:
+  #         - description: Remote access security group rule
+  #           types:
+  #             - HTTP
+  #             - HTTPS
+  #           sources:
+  #             - 0.0.0.0/0
+  #       outboundRules:
+  #         - description: Allow all outbound
+  #           types:
+  #             - ALL
+  #           sources:
+  #             - 0.0.0.0/0
+  #   loadBalancers:
+  #     applicationLoadBalancers:
+  #       - name: alb-ingress
+  #         scheme: internet-facing
+  #         attributes:
+  #           deletionProtection: true
+  #         subnets:
+  #           - sn-ingress-public-a
+  #           - sn-ingress-public-b
+  #           - sn-ingress-public-c
+  #         securityGroups:
+  #           - ingress-alb-sg
+  #         listeners:
+  #           - name: alb-listener
+  #             port: 80
+  #             protocol: HTTP
+  #             targetGroup: alb-ingress-tg
+  #             type: forward
+  #   targetGroups:
+  #     - name: alb-ingress-tg
+  #       port: 80
+  #       protocol: HTTP
+  #       type: ip
+  #       healthCheck:
+  #         enabled: true
+  #         port: 80
+  #         protocol: HTTP
+  #         targets:
+  #           - '' #Enter the IP addresses of instances in the workload account
+  #         #that should be registered as targets for this target group.
+
+  # - name: vpc-inspection
+  #   account: NetworkServices
+  #   region: *HOME_REGION
+  #   cidrs:
+  #     - 172.23.0.0/24
+  #   defaultSecurityGroupRulesDeletion: true
+  #   routeTables:
+  #     - name: rt-inspection-a
+  #       routes:
+  #         - name: Local
+  #           destination: 172.23.0.0/24
+  #           type: local
+  #         - name: NfwRoute
+  #           destination: 0.0.0.0/0
+  #           type: networkFirewall
+  #           target: inspection-nfw
+  #           targetAvailabilityZone: a
+  #     - name: rt-inspection-b
+  #       routes:
+  #         - name: Local
+  #           destination: 172.23.0.0/24
+  #           type: local
+  #         - name: NfwRoute
+  #           destination: 0.0.0.0/0
+  #           type: networkFirewall
+  #           target: inspection-nfw
+  #           targetAvailabilityZone: b
+  #     - name: rt-inspection-c
+  #       routes:
+  #         - name: Local
+  #           destination: 172.23.0.0/24
+  #           type: local
+  #         - name: NfwRoute
+  #           destination: 0.0.0.0/0
+  #           type: networkFirewall
+  #           target: inspection-nfw
+  #           targetAvailabilityZone: c
+  #     - name: rt-network-firewall
+  #       routes:
+  #         - name: Local
+  #           destination: 172.23.0.0/24
+  #           type: local
+  #         - name: TgwRoute
+  #           destination: 0.0.0.0/0
+  #           type: transitGateway
+  #           target: tgw-id
+  #   subnets:
+  #     - name: sn-nfw-tgw-a
+  #       availabilityZone: a
+  #       routeTable: rt-inspection-a
+  #       ipv4CidrBlock: 172.23.0.0/28
+  #     - name: sn-nfw-tgw-b
+  #       availabilityZone: b
+  #       routeTable: rt-inspection-b
+  #       ipv4CidrBlock: 172.23.0.16/28
+  #     - name: sn-nfw-tgw-c
+  #       availabilityZone: c
+  #       routeTable: rt-inspection-c
+  #       ipv4CidrBlock: 172.23.0.32/28
+  #     - name: sn-nfw-a
+  #       availabilityZone: a
+  #       routeTable: rt-network-firewall
+  #       ipv4CidrBlock: 172.23.0.48/28
+  #     - name: sn-nfw-b
+  #       availabilityZone: b
+  #       routeTable: rt-network-firewall
+  #       ipv4CidrBlock: 172.23.0.64/28
+  #     - name: sn-nfw-c
+  #       availabilityZone: c
+  #       routeTable: rt-network-firewall
+  #       ipv4CidrBlock: 172.23.0.80/28
+  #   transitGatewayAttachments:
+  #     - name: tga-inspection
+  #       transitGateway:
+  #         name: tgw-id
+  #         account: NetworkServices
+  #       routeTableAssociations:
+  #         - tgrt-firewall
+  #       routeTablePropagations: []
+  #       subnets:
+  #         - sn-nfw-tgw-a
+  #         - sn-nfw-tgw-b
+  #         - sn-nfw-tgw-c
+  #       options:
+  #         applianceModeSupport: enable
+  #   networkAcls:
+  #     - name: nacl-inspection-private
+  #       subnetAssociations:
+  #         - sn-nfw-a
+  #         - sn-nfw-b
+  #         - sn-nfw-c
+  #       inboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #       outboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 0.0.0.0/0
+  #     - name: nacl-inspection-tgw
+  #       subnetAssociations:
+  #         - sn-nfw-tgw-a
+  #         - sn-nfw-tgw-b
+  #         - sn-nfw-tgw-c
+  #       inboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           source: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           source: 0.0.0.0/0
+  #       outboundRules:
+  #         - rule: 200
+  #           protocol: 6
+  #           fromPort: 22
+  #           toPort: 22
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 300
+  #           protocol: 6
+  #           fromPort: 3389
+  #           toPort: 3389
+  #           action: deny
+  #           destination: 0.0.0.0/0
+  #         - rule: 400
+  #           protocol: -1
+  #           fromPort: -1
+  #           toPort: -1
+  #           action: allow
+  #           destination: 0.0.0.0/0
+
+vpcFlowLogs:
+  trafficType: ALL
+  maxAggregationInterval: 600
+  destinations:
+    - cloud-watch-logs
+    - s3
+  destinationsConfig:
+    cloudWatchLogs:
+      retentionInDays: 30
+  defaultFormat: false
+  customFields:
+    - version
+    - account-id
+    - interface-id
+    - srcaddr
+    - dstaddr
+    - srcport
+    - dstport
+    - protocol
+    - packets
+    - bytes
+    - start
+    - end
+    - action
+    - log-status
+    - vpc-id
+    - subnet-id
+    - instance-id
+    - tcp-flags
+    - type
+    - pkt-srcaddr
+    - pkt-dstaddr
+    - region
+    - az-id
+    - pkt-src-aws-service
+    - pkt-dst-aws-service
+    - flow-direction
+    - traffic-path

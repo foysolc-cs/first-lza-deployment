@@ -1,0 +1,111 @@
+{
+  "tags": {
+    "pla:alertinggroup": {
+      "tag_value": {
+        "@@assign": [
+          "ProductTeam"
+        ]
+      }
+    },
+    "pla:businessservice": {
+      "tag_value": {
+        "@@assign": [
+          "EnhancedLandingZone"
+        ]
+      }
+    },
+    "pla:businessserviceinformation": {
+      "tag_value": {
+        "@@assign": [
+          "https://cloudscaler.atlassian.net/wiki/x/BwBrL"
+        ]
+      }
+    },
+    "pla:coa:enabled": {
+      "tag_value": {
+        "@@assign": [
+          "True",
+          "False"
+        ]
+      }
+    },
+    "pla:compliance:framework": {
+      "tag_value": {
+        "@@assign": [
+          "GDPR",
+          "PCI",
+          "HIPAA",
+          "CIS",
+          "NIST",
+          "None"
+        ]
+      }
+    },
+    "pla:confidentiality": {
+      "tag_value": {
+        "@@assign": [
+          "Public",
+          "Internal",
+          "Confidential",
+          "Highly-Confidential"
+        ]
+      }
+    },
+    "pla:costcenter": {
+      "tag_value": {
+        "@@assign": [
+          "ELZ"
+        ]
+      }
+    },
+    "pla:elzvended": {
+      "tag_value": {
+        "@@assign": [
+          "True",
+          "False"
+        ]
+      }
+    },
+    "pla:environment": {
+      "tag_value": {
+        "@@assign": [
+          "Platform"
+        ]
+      }
+    },
+    "pla:integrity": {
+      "tag_value": {
+        "@@assign": [
+          "High",
+          "Medium",
+          "Low"
+        ]
+      }
+    },
+    "pla:resolvergroup": {
+      "tag_value": {
+        "@@assign": [
+          "ProductTeam"
+        ]
+      }
+    },
+    "pla:scheduling:enabled": {
+      "tag_value": {
+        "@@assign": [
+          "True",
+          "False"
+        ]
+      }
+    },
+    "pla:supporthours": {
+      "tag_value": {
+        "@@assign": [
+          "Platinum",
+          "Gold",
+          "Silver",
+          "Bronze"
+        ]
+      }
+    }
+  }
+}

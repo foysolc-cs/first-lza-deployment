@@ -1,0 +1,254 @@
+homeRegion: &HOME_REGION eu-west-2
+enabledRegions:
+  - *HOME_REGION
+managementAccountAccessRole: OrganizationAccountAccessRole
+cloudwatchLogRetentionInDays: 731
+cdkOptions:
+  centralizeBuckets: true
+  useManagementAccessRole: true
+terminationProtection: true
+snsTopics:
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+  topics:
+    - name: SecurityCritical
+      emailAddresses:
+        - foysol.chowdhury+elz-alerts@cloudscaler.com
+    - name: SecurityHigh
+      emailAddresses:
+        - foysol.chowdhury+elz-alerts@cloudscaler.com
+    - name: SecurityMedium
+      emailAddresses:
+        - foysol.chowdhury+elz-alerts@cloudscaler.com
+    - name: SecurityLow
+      emailAddresses:
+        - foysol.chowdhury+elz-alerts@cloudscaler.com
+    - name: SecurityIgnore
+      emailAddresses:
+        - foysol.chowdhury+elz-alerts@cloudscaler.com
+controlTower:
+  enable: false
+  controls: []
+logging:
+  account: LogArchive
+  cloudtrail:
+    enable: true
+    organizationTrail: true
+    organizationTrailSettings:
+      multiRegionTrail: true
+      globalServiceEvents: true
+      managementEvents: true
+      s3DataEvents: true
+      lambdaDataEvents: true
+      sendToCloudWatchLogs: true
+      apiErrorRateInsight: false
+      apiCallRateInsight: true
+  sessionManager:
+    sendToCloudWatchLogs: true
+    sendToS3: true
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+    attachPolicyToIamRoles:
+      - EC2-Default-SSM-Role
+  cloudwatchLogs:
+    dynamicPartitioning: dynamic-partitioning/log-filters.json
+    subscription:
+      type: ACCOUNT
+      selectionCriteria: 'LogGroupName NOT IN ["/aws/lambda/{{AcceleratorPrefix}}-FirehoseRecordsProcessor", "aws-accelerator-cloudtrail-logs", "aws-controltower/CloudTrailLogs"]'
+      overrideExisting: true
+  accessLogBucket:
+    lifecycleRules:
+      - enabled: true
+        id: /access-log-lifecycle
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 180
+  centralLogBucket:
+    lifecycleRules:
+      - enabled: true
+        id: /central-log-lifecycle
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 180
+  elbLogBucket:
+    lifecycleRules:
+      - enabled: true
+        id: /elb-log-lifecycle
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+        transitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 365
+        noncurrentVersionTransitions:
+          - storageClass: GLACIER_IR
+            transitionAfter: 180
+ssmInventory:
+  enable: true
+  deploymentTargets:
+    organizationalUnits:
+      - Root
+reports:
+  costAndUsageReport:
+    compression: Parquet
+    format: Parquet
+    reportName: '{{PlatformPrefix}}-cur'
+    s3Prefix: cur
+    timeUnit: HOURLY
+    refreshClosedReports: true
+    reportVersioning: CREATE_NEW_REPORT
+    lifecycleRules:
+      - enabled: true
+        abortIncompleteMultipartUpload: 7
+        expiration: 730
+        noncurrentVersionExpiration: 730
+  budgets:
+    - deploymentTargets:
+        accounts:
+          - Management
+      name: '{{PlatformPrefix}}-budget'
+      timeUnit: MONTHLY
+      type: COST
+      amount: 1000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: true
+      includeRefund: true
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+    - deploymentTargets:
+        organizationalUnits:
+          - Backups
+          - Closed
+          - NetworkServices
+          - PolicyStaging
+          - Sandbox
+          - SecurityServices
+          - SharedServices
+          - Workloads
+      name: '{{PlatformPrefix}}-default-budget'
+      timeUnit: MONTHLY
+      type: COST
+      amount: 1000
+      includeUpfront: true
+      includeTax: true
+      includeSupport: true
+      includeSubscription: true
+      includeRecurring: true
+      includeOtherSubscription: true
+      includeDiscount: true
+      includeCredit: false
+      includeRefund: false
+      useBlended: false
+      useAmortized: false
+      unit: USD
+      notifications:
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 100
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 90
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 80
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 75
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+        - type: ACTUAL
+          thresholdType: PERCENTAGE
+          threshold: 50
+          comparisonOperator: GREATER_THAN
+          subscriptionType: EMAIL
+          address: 'foysol.chowdhury+elz-platform-budget@cloudscaler.com'
+limits:
+  - serviceCode: codebuild
+    quotaCode: L-4DDC4A99
+    desiredValue: 10
+    deploymentTargets:
+      accounts:
+        - Management
+tags:
+  - key: pla:alertinggroup
+    value: ProductTeam
+  - key: pla:businessservice
+    value: EnhancedLandingZone
+  - key: pla:businessserviceinformation
+    value: https://cloudscaler.atlassian.net/wiki/x/BwBrL
+  - key: pla:costcenter
+    value: ELZ
+  - key: pla:elzvended
+    value: 'True'
+  - key: pla:environment
+    value: Platform
+  - key: pla:resolvergroup
+    value: ProductTeam
+  - key: pla:supporthours
+    value: Platinum
+  - key: pla:updatedby
+    value: CloudscalerProductTeam

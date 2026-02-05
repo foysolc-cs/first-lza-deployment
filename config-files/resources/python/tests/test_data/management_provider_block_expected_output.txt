@@ -1,0 +1,11 @@
+provider "aws" {
+  region = "eu-west-2"
+}
+
+provider "aws" {
+  assume_role {
+    role_arn = "arn:aws:iam::555555555555:role/OrganizationAccountAccessRole"
+  }
+  alias  = "eu-west-2-audit"
+  region = "eu-west-2"
+}

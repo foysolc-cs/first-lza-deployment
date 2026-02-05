@@ -1,0 +1,3 @@
+globalReplacements:
+  - key: PlatformPrefix
+    path: /accelerator/lza-prefix

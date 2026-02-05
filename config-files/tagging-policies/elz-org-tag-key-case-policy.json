@@ -1,0 +1,156 @@
+{
+  "tags": {
+    "pla:alertinggroup": {
+      "tag_key": {
+        "@@assign": "pla:alertinggroup",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:backupplan": {
+      "tag_key": {
+        "@@assign": "pla:backupplan",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:businessservice": {
+      "tag_key": {
+        "@@assign": "pla:businessservice",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:businessserviceinformation": {
+      "tag_key": {
+        "@@assign": "pla:businessserviceinformation",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:coa:enabled": {
+      "tag_key": {
+        "@@assign": "pla:coa:enabled",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:compliance:framework": {
+      "tag_key": {
+        "@@assign": "pla:compliance:framework",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:confidentiality": {
+      "tag_key": {
+        "@@assign": "pla:confidentiality",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:costcenter": {
+      "tag_key": {
+        "@@assign": "pla:costcenter",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:disasterrecoveryrpo": {
+      "tag_key": {
+        "@@assign": "pla:disasterrecoveryrpo",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:elzvended": {
+      "tag_key": {
+        "@@assign": "pla:elzvended",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:elzversion": {
+      "tag_key": {
+        "@@assign": "pla:elzversion",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:environment": {
+      "tag_key": {
+        "@@assign": "pla:environment",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:integrity": {
+      "tag_key": {
+        "@@assign": "pla:integrity",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:resolvergroup": {
+      "tag_key": {
+        "@@assign": "pla:resolvergroup",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:scheduling:enabled": {
+      "tag_key": {
+        "@@assign": "pla:scheduling:enabled",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:scheduling:startup": {
+      "tag_key": {
+        "@@assign": "pla:scheduling:startup",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:scheduling:shutdown": {
+      "tag_key": {
+        "@@assign": "pla:scheduling:shutdown",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:supporthours": {
+      "tag_key": {
+        "@@assign": "pla:supporthours",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    },
+    "pla:updatedby": {
+      "tag_key": {
+        "@@assign": "pla:updatedby",
+        "@@operators_allowed_for_child_policies": [
+          "@@none"
+        ]
+      }
+    }
+  }
+}

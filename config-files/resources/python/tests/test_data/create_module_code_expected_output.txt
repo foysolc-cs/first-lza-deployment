@@ -1,0 +1,32 @@
+module "my-dummy-module-eu-west-2-management" {
+  source = "github.com/cloudscaler/my-dummy-module"
+  allowed_source_org_ous = ["o-abc/def/ghi"]
+  dummy_api_key = "myDummyAPIKey"
+  complex_var = {
+    test_var_string = "this is a string"
+    test_var_int = 10
+    test_var_bool = true
+    test_var_list = ["o-abc/def/ghi"]
+    test_var_dict = {
+      dict_1 = "this is a complex var"
+    }
+  }
+}
+
+module "my-dummy-module-eu-west-2-audit" {
+  source = "github.com/cloudscaler/my-dummy-module"
+  allowed_source_org_ous = ["o-abc/def/ghi"]
+  dummy_api_key = "myDummyAPIKey"
+  complex_var = {
+    test_var_string = "this is a string"
+    test_var_int = 10
+    test_var_bool = true
+    test_var_list = ["o-abc/def/ghi"]
+    test_var_dict = {
+      dict_1 = "this is a complex var"
+    }
+  }
+  providers = {
+    aws = aws.eu-west-2-audit
+    }
+}

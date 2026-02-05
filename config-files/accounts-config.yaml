@@ -1,0 +1,34 @@
+mandatoryAccounts:
+  - name: Management
+    description: The management (primary) account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: foysol.chowdhury+management@cloudscaler.com
+    organizationalUnit: Root
+  - name: LogArchive
+    description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: foysol.chowdhury+elz-logarchive@cloudscaler.com
+    organizationalUnit: SecurityServices
+  - name: Audit
+    description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
+    email: foysol.chowdhury+elz-audit@cloudscaler.com
+    organizationalUnit: SecurityServices
+workloadAccounts:
+  - name: SharedServices
+    description: The SharedServices account contains the shared tooling services used across all tenant accounts, where Operations, Security, Infrastructure, and Finance teams build, deploy, and share resources and products across all the accounts in the organisation.
+    email: <shared-services>@example.com <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: SharedServices
+  - name: NetworkServices
+    description: The NetworkServices account manages the network routing configuration for all member accounts. Within this account, network administrators can manage and build security measures to protect outbound and inbound traffic, centralising networking within your environment.
+    email: <networkservices>@example.com <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: NetworkServices
+  - name: PolicyDevelopmemt
+    description: The Policy Development account is designed to manage the development and testing of service control policies, tag policies and backup policies for the AWS Organizations service.
+    email: <policydevelopment>@example.com <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: PolicyStaging
+  - name: Backups
+    description: The Backups account securely stores copies of Production backups. Access is extremely restricted, and Breakglass Access is only granted when necessary; various guardrails are in place to prevent the deletion of any backups within this account.
+    email: <backups>@example.com <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: Backups
+  - name: Observability
+    description: Observability is the cross-account monitoring account and AWS Health delegated admin. The account can access CloudWatch metrics and logs from source accounts for dashboarding a reporting purposes.
+    email: <observability>@example.com <----- UPDATE EMAIL ADDRESS
+    organizationalUnit: SharedServices

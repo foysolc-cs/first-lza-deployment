@@ -1,0 +1,62 @@
+{
+  "tags": {
+    "pla:alertinggroup": {
+      "tag_value": {
+        "@@append": [
+          "ExampleAlertingGroup"
+        ]
+      }
+    },
+    "pla:businessservice": {
+      "tag_value": {
+        "@@append": [
+          "ExampleBusinessService"
+        ]
+      }
+    },
+    "pla:businessserviceinformation": {
+      "tag_value": {
+        "@@append": [
+          "ExampleBusinessServiceURL"
+        ]
+      }
+    },
+    "pla:compliance:framework": {
+      "tag_value": {
+        "@@append": [
+          "ExampleComplianceFramework"
+        ]
+      }
+    },
+    "pla:confidentiality": {
+      "tag_value": {
+        "@@append": [
+          "ExampleConfidentiality"
+        ]
+      }
+    },
+    "pla:costcenter": {
+      "tag_value": {
+        "@@append": [
+          "ExampleCostCenter"
+        ]
+      }
+    },
+    "pla:environment": {
+      "tag_value": {
+        "@@append": [
+          "Dev",
+          "Pre",
+          "Pro"
+        ]
+      }
+    },
+    "pla:resolvergroup": {
+      "tag_value": {
+        "@@append": [
+          "ExampleResolverGroup"
+        ]
+      }
+    }
+  }
+}

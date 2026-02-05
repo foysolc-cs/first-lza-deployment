@@ -1,0 +1,4 @@
+[
+    { "logGroupPattern": "/elz-SecurityHub", "s3Prefix": "security-hub" },
+    { "logGroupPattern": "elz-sessionmanager-logs", "s3Prefix": "ssm" }
+]

@@ -1,0 +1,85 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyAdminServiceOperations",
+      "Effect": "Deny",
+      "Action": [
+        "backup:CreateBackupPlan",
+        "backup:CreateBackupSelection",
+        "backup:CreateBackupVault",
+        "backup:DeleteBackupPlan",
+        "backup:DeleteBackupSelection",
+        "backup:DeleteBackupVault",
+        "backup:DeleteBackupVaultAccessPolicy",
+        "backup:DeleteBackupVaultNotifications",
+        "backup:DeleteRecoveryPoint",
+        "backup:DisassociateRecoveryPoint",
+        "backup:PutBackupVaultAccessPolicy",
+        "backup:PutBackupVaultNotifications",
+        "backup:StartCopyJob",
+        "backup:UpdateBackupPlan",
+        "backup:UpdateRecoveryPointLifecycle"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "AllowRestoreOperations",
+      "Effect": "Allow",
+      "Action": [
+        "backup:StartBackupJob",
+        "backup:StartRestoreJob",
+        "backup:StopBackupJob"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "DenyCopyOperations",
+      "Effect": "Deny",
+      "Action": [
+        "backup:CopyFromBackupVault",
+        "backup:StartCopyJob"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringNotLike": {
+          "aws:PrincipalArn": [
+            "arn:${PARTITION}:iam::*:role/${MANAGEMENT_ACCOUNT_ACCESS_ROLE}",
+            "arn:${PARTITION}:iam::*:role/${ACCELERATOR_PREFIX}-aws-managed-backup-role",
+            "arn:${PARTITION}:iam::*:role/local-aws-managed-backup-role"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "DenyIncorrectCopyTarget",
+      "Effect": "Deny",
+      "Action": [
+        "backup:CopyFromBackupVault"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "ArnNotLike": {
+          "backup:CopyTargets": [
+            "arn:${PARTITION}:backup:*:<!REPLACE-WITH-BACKUP-ACCOUNT-ID!>:backup-vault:*"
+          ]
+        }
+      }
+    }
+  ]
+}

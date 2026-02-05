@@ -1,0 +1,608 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Metadata:
+  Generator: tf-module-pipeline
+
+Parameters:
+  NoncurrentVersionExpirationDays:
+    Type: Number
+    Default: 30
+    Description: Number of days to retain noncurrent versions before expiration
+  PlatformPrefix:
+    Type: String
+    Description: The platform prefix used when deploying ELZ
+    Default: elz
+
+Resources:
+  TerraformStateBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "terraform-state-${AWS::AccountId}-${AWS::Region}"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Sub "{{resolve:ssm:/${PlatformPrefix}/installer/kms/key-arn}}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Sub "${PlatformPrefix}-s3-access-logs-${AWS::AccountId}-${AWS::Region}"
+        LogFilePrefix: !Sub "terraform-state-${AWS::AccountId}-${AWS::Region}"
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireNoncurrentVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: !Ref NoncurrentVersionExpirationDays
+          - Id: ExpireIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+      ObjectLockConfiguration:
+        ObjectLockEnabled: Enabled
+        Rule:
+          DefaultRetention:
+            Mode: GOVERNANCE
+            Days: 14
+
+
+  TerraformStateBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TerraformStateBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureConnections
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${TerraformStateBucket}"
+              - !Sub "arn:${AWS::Partition}:s3:::${TerraformStateBucket}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  CodePipelinePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: '{{resolve:ssm:/accelerator/lza-prefix}}-module-Pipeline'
+      RoleArn: !GetAtt CodePipelineIAMRole.Arn
+      ArtifactStore:
+        EncryptionKey:
+          Id: !Sub "{{resolve:ssm:/${PlatformPrefix}/installer/kms/key-arn}}"
+          Type: KMS
+        Location: !Ref S3Bucket
+        Type: S3
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Configuration
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: '1'
+              Configuration:
+                # ConnectionArn: 'arn:aws:codeconnections:eu-west-2:1234567890:connection/*' <----- UPDATE TO FULL CODECONNECTION ARN
+                # FullRepositoryId: 'cloudscaler/*' <----- UPDATE TO FULL REPOSITORY NAME
+                BranchName: 'main'
+                DetectChanges: 'false'
+                OutputArtifactFormat: 'CODE_ZIP'
+              OutputArtifacts:
+                - Name: config
+              RoleArn: !GetAtt SourceConfigIAMRole.Arn
+              RunOrder: 1
+        - Name: GenerateConfiguration
+          Actions:
+            - Name: GenerateConfiguration
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+              InputArtifacts:
+                - Name: config
+              OutputArtifacts:
+                - Name: build_output
+              RunOrder: 1
+        - Name: TerraformPlan
+          Actions:
+            - Name: TerraformPlan
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref TerraformPlanProject
+              InputArtifacts:
+                - Name: build_output
+              OutputArtifacts:
+                - Name: terraform_workspace
+              RunOrder: 1
+        - Name: Approval
+          Actions:
+            - Name: ApprovePlan
+              ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: '1'
+              Configuration:
+                CustomData: Please review the Terraform plan and approve if the changes are acceptable.
+              RunOrder: 1
+        - Name: TerraformApply
+          Actions:
+            - Name: TerraformApply
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: '1'
+              Configuration:
+                ProjectName: !Ref TerraformApplyProject
+              InputArtifacts:
+                - Name: terraform_workspace
+              RunOrder: 1
+
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: tf-module-build
+      Description: CodeBuild Project to dynamically generate Provider blocks for ELZ Terraform Modules.
+      Source:
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                python: 3.12
+              commands:
+                - pip install boto3
+                - pip install mypy-boto3-organizations
+                - pip install pyyaml
+            build:
+              commands:
+                - python ./resources/python/account_ids.py
+          artifacts:
+            files:
+              - "**/*"
+            name: terraform-output
+            base-directory: terraform
+        InsecureSsl: false
+        Type: CODEPIPELINE
+      Artifacts:
+        EncryptionDisabled: false
+        Name: elz-terraform-build
+        OverrideArtifactName: false
+        Packaging: NONE
+        Type: CODEPIPELINE
+      Cache:
+        Location: !Ref S3Bucket
+        Type: S3
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:5.0
+        ImagePullCredentialsType: CODEBUILD
+        PrivilegedMode: false
+        Type: LINUX_CONTAINER
+      ServiceRole: !GetAtt CodeBuildIAMRole.Arn
+      TimeoutInMinutes: 60
+      QueuedTimeoutInMinutes: 480
+      EncryptionKey: !Sub "arn:${AWS::Partition}:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/s3"
+      BadgeEnabled: false
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+        S3Logs:
+          Status: DISABLED
+          EncryptionDisabled: false
+      Visibility: PRIVATE
+
+  TerraformPlanProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: tf-module-plan
+      Description: CodeBuild project to run Terraform plan
+      ServiceRole: !GetAtt TerraformRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        EnvironmentVariables:
+          - Name: TF_STATE_BUCKET
+            Value: !Ref TerraformStateBucket
+          - Name: TF_STATE_KEY
+            Value: terraform.tfstate
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+          - Name: GITHUB_TOKEN
+            Type: SECRETS_MANAGER
+            Value: accelerator/github-token
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - |
+                  if ! command -v terraform &> /dev/null; then
+                    echo "Terraform not found. Installing from S3..."
+                    wget https://cloudscaler-20240403130721499800000002.s3.eu-west-2.amazonaws.com/terraform_1.12.2_linux_amd64.zip
+                    unzip -o terraform_1.12.2_linux_amd64.zip
+                    chmod +x terraform
+                    mv terraform /usr/local/bin/
+                    rm terraform_1.12.2_linux_amd64.zip
+                  else
+                    echo "Terraform is already installed"
+                  fi
+                - terraform version
+            pre_build:
+              commands:
+                - git config --global url."https://github.com/".insteadOf "git@github.com:"
+                - echo "machine github.com login ${GITHUB_TOKEN}" > ~/.netrc
+                - chmod 600 ~/.netrc
+            build:
+              commands:
+                - echo "Initializing Terraform"
+                - echo $TF_STATE_BUCKET
+                - echo $TF_STATE_KEY
+                - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_DEFAULT_REGION}" -backend-config="encrypt=true"
+                - echo "Running Terraform plan"
+                - terraform plan -out=tfplan.binary
+                - terraform show -json tfplan.binary > tfplan.json
+          artifacts:
+            files:
+              - '**/*'
+            name: terraform-workspace
+
+  TerraformApplyProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: tf-module-apply
+      Description: CodeBuild project to run Terraform apply
+      ServiceRole: !GetAtt TerraformRole.Arn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
+        EnvironmentVariables:
+          - Name: TF_STATE_BUCKET
+            Value: !Ref TerraformStateBucket
+          - Name: TF_STATE_KEY
+            Value: terraform.tfstate
+          - Name: AWS_DEFAULT_REGION
+            Value: !Ref AWS::Region
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              commands:
+                - |
+                  if ! command -v terraform &> /dev/null; then
+                    echo "Terraform not found. Installing from S3..."
+                    wget https://cloudscaler-20240403130721499800000002.s3.eu-west-2.amazonaws.com/terraform_1.12.2_linux_amd64.zip
+                    unzip -o terraform_1.12.2_linux_amd64.zip
+                    chmod +x terraform
+                    mv terraform /usr/local/bin/
+                    rm terraform_1.12.2_linux_amd64.zip
+                  else
+                    echo "Terraform is already installed"
+                  fi
+                - terraform version
+            pre_build:
+              commands:
+                - git config --global url."https://github.com/".insteadOf "git@github.com:"
+                - echo "machine github.com login ${GITHUB_TOKEN}" > ~/.netrc
+                - chmod 600 ~/.netrc
+            build:
+              commands:
+                - echo "Initializing Terraform"
+                - terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=${TF_STATE_KEY}" -backend-config="region=${AWS_DEFAULT_REGION}" -backend-config="encrypt=true"
+                - echo "Applying Terraform plan"
+                - terraform apply -auto-approve tfplan.binary
+          artifacts:
+            files:
+              - '**/*'
+
+  TerraformRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      Path: /service-role/
+
+  CodePipelineIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: Terraform-Deployment-CodePipeline-Role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref CodePipelineManagedPolicy
+      MaxSessionDuration: 3600
+      Description: ''
+  SourceConfigIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: Terraform-Deployment-Source-Config-Role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref SourceConfigManagedPolicy
+      MaxSessionDuration: 3600
+      Description: ''
+
+  CodePipelineManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${S3Bucket}"
+              - !Sub "arn:${AWS::Partition}:s3:::${S3Bucket}/*"
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Resource: !Sub "{{resolve:ssm:/${PlatformPrefix}/installer/kms/key-arn}}"
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Resource:
+              - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/Terraform-Deployment-CodePipeline-Role"
+              - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/Terraform-Deployment-Source-Config-Role"
+          - Effect: Allow
+            Action:
+              - sns:Publish
+            Resource:
+              - !Sub "arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:elz-pipeline-status-topic"
+              - !Sub "arn:${AWS::Partition}:sns:${AWS::Region}:${AWS::AccountId}:elz-pipeline-failed-status-topic"
+          - Effect: Allow
+            Action:
+              - codebuild:BatchGetBuilds
+              - codebuild:StartBuild
+              - codebuild:StopBuild
+            Resource:
+              - !Sub arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:project/tf-module-build
+              - !Sub arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:project/tf-module-plan
+              - !Sub arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:project/tf-module-apply
+          - Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+              - s3:ListBucket
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${TerraformStateBucket}"
+              - !Sub "arn:${AWS::Partition}:s3:::${TerraformStateBucket}/*"
+          - Effect: Allow
+            Action:
+              - s3:DeleteObject
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${TerraformStateBucket}/terraform.tfstate.tflock"
+
+  SourceConfigManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: TerraformS3SourcePolicy
+      Description: Managed policy for the Terraform deployment S3 source role
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${S3Bucket}"
+              - !Sub "arn:${AWS::Partition}:s3:::${S3Bucket}/*"
+              - !Sub "arn:aws:s3:::${PlatformPrefix}-config-${AWS::AccountId}-${AWS::Region}"
+              - !Sub "arn:aws:s3:::${PlatformPrefix}-config-${AWS::AccountId}-${AWS::Region}/zipped/*"
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Resource: !Sub "{{resolve:ssm:/${PlatformPrefix}/installer/kms/key-arn}}"
+          - Effect: Allow
+            Action:
+              - codeconnections:UseConnection
+              - codestar-connections:UseConnection
+            Resource:
+              # - "arn:aws:codeconnections:eu-west-2:1234567890:connection/*"  <----- UPDATE TO FULL CODECONNECTION ARN
+
+  CodeBuildIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      RoleName: elz-tf-module-codebuild-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - !Ref TerraformCodeBuildManagedPolicy
+      Description: ''
+
+  TerraformCodeBuildManagedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: TerraformCodeBuildPolicy
+      Description: Managed policy for the Terraform deployment CodeBuild role
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action: ssm:GetParameters
+            Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/elz/elz-PipelineStack-${AWS::AccountId}-${AWS::Region}/version
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/tf-module-build"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/tf-module-build:*"
+          - Effect: Allow
+            Action:
+              - codebuild:CreateReportGroup
+              - codebuild:CreateReport
+              - codebuild:UpdateReport
+              - codebuild:BatchPutTestCases
+              - codebuild:BatchPutCodeCoverages
+            Resource: !Sub "arn:${AWS::Partition}:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/elz-BuildProject-*"
+          - Effect: Allow
+            Action:
+              - kms:Decrypt
+              - kms:DescribeKey
+              - kms:Encrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+            Resource: !Sub "{{resolve:ssm:/${PlatformPrefix}/installer/kms/key-arn}}"
+          - Effect: Allow
+            Action:
+              - s3:GetObject*
+              - s3:GetBucket*
+              - s3:List*
+              - s3:DeleteObject*
+              - s3:PutObject
+              - s3:PutObjectLegalHold
+              - s3:PutObjectRetention
+              - s3:PutObjectTagging
+              - s3:PutObjectVersionTagging
+              - s3:Abort*
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${S3Bucket}"
+              - !Sub "arn:${AWS::Partition}:s3:::${S3Bucket}/*"
+          - Effect: Allow
+            Action:
+              - organizations:ListAccounts
+              - organizations:ListAccountsForParent
+              - organizations:ListChildren
+              - organizations:ListOrganizationalUnitsForParent
+              - organizations:ListParents
+              - organizations:ListRoots
+              - ssm:GetParameter
+            Resource: '*'
+
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "terraform-pipeline-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: aws:kms
+              KMSMasterKeyID: !Sub "{{resolve:ssm:/${PlatformPrefix}/installer/kms/key-arn}}"
+            BucketKeyEnabled: false
+      LifecycleConfiguration:
+        Rules:
+          - AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+            Id: !Sub "LifecycleRuleelz-pipeline-${AWS::AccountId}-${AWS::Region}"
+            Status: Enabled
+            ExpirationInDays: 1825
+            NoncurrentVersionExpirationInDays: 1825
+            NoncurrentVersionTransitions:
+              - TransitionInDays: 366
+                StorageClass: DEEP_ARCHIVE
+            Transitions:
+              - TransitionInDays: 365
+                StorageClass: DEEP_ARCHIVE
+      LoggingConfiguration:
+        DestinationBucketName: !Sub "${PlatformPrefix}-s3-logs-${AWS::AccountId}-${AWS::Region}"
+        LogFilePrefix: ''
+      VersioningConfiguration:
+        Status: Enabled
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: deny-insecure-connections
+            Effect: Deny
+            Principal:
+              AWS: '*'
+            Action: s3:*
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${S3Bucket}"
+              - !Sub "arn:${AWS::Partition}:s3:::${S3Bucket}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'

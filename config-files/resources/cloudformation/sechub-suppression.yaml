@@ -1,0 +1,417 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Security hub automation to suppress LZA infrastructure that we have no control over
+
+Resources:
+  SuppressCdkAccel:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: cdk-accel
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from cdk-accel deployments
+      RuleName: Suppress cdk-accel findings
+      IsTerminal: false
+      RuleOrder: 1
+      RuleStatus: ENABLED
+  SuppressCloudformationBuckets:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: cf-templates-
+        ResourceType:
+          - Comparison: EQUALS
+            Value: AwsS3Bucket
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from cloudformation buckets
+      RuleName: Suppress cloudformation buckets
+      IsTerminal: false
+      RuleOrder: 2
+      RuleStatus: ENABLED
+  SuppressElzNetworkVpcStack:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-NetworkVpcStack
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from LZA elz-NetworkVpcStack
+      RuleName: Suppress elz-NetworkVpcStack
+      IsTerminal: false
+      RuleOrder: 3
+      RuleStatus: ENABLED
+  SuppressElzOperationsStack:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-OperationsStack
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from LZA elz-OperationsStack
+      RuleName: Suppress elz-OperationsStack
+      IsTerminal: false
+      RuleOrder: 4
+      RuleStatus: ENABLED
+  SuppressElzSecurityStack:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-SecurityStack
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from LZA elz-SecurityStack
+      RuleName: Suppress elz-SecurityStack
+      IsTerminal: false
+      RuleOrder: 5
+      RuleStatus: ENABLED
+  SuppressELZSecurityResourcesStack:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-SecurityResourcesStac # This is not a typo
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from LZA elz-SecurityResourcesStack
+      RuleName: Suppress elz-SecurityResourcesStack
+      IsTerminal: false
+      RuleOrder: 6
+      RuleStatus: ENABLED
+  SuppressElzLoggingStack:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-LoggingStack
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from LZA elz-LoggingStack
+      RuleName: Suppress elz-LoggingStack
+      IsTerminal: false
+      RuleOrder: 7
+      RuleStatus: ENABLED
+  SuppressBreakGlassUsers:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: breakGlassUser
+        ResourceType:
+          - Comparison: EQUALS
+            Value: AwsIamUser
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings related to breakGlassUser IAM users
+      RuleName: Suppress breakGlassUser IAM users
+      IsTerminal: false
+      RuleOrder: 8
+      RuleStatus: ENABLED
+  SuppressLZACore:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        RecordState:
+          - Comparison: EQUALS
+            Value: ACTIVE
+        ResourceTags:
+          - Comparison: EQUALS
+            Key: pla:elzvended
+            Value: 'True'
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+            ## The cloudwatch implementation to update the note field is broken
+            ## The validator expects Note -> UpdatedBy to be a map, and the deployment expects a string and it can't be
+            ## both at the same time. Therefore, the whole note below cannot be included. This may be fixed in future.
+            # Note:
+            #   Text: Automatically suppress LZA core infrastructure findings
+            #   UpdatedBy:
+            #     Name: LZA Extensions
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress LZA infrastructure that we have no control over
+      RuleName: Suppress LZA infrastructure
+      IsTerminal: false
+      RuleOrder: 9
+      RuleStatus: ENABLED
+  SuppressElzOrganizationsStack:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-OrganizationsStack
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from LZA elz-OrganizationsStack
+      RuleName: Suppress elz-OrganizationsStack
+      IsTerminal: false
+      RuleOrder: 10
+      RuleStatus: ENABLED
+  SuppressElzSecurityAuditStack:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-SecurityAuditStack
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from LZA elz-SecurityAuditStack
+      RuleName: Suppress elz-SecurityAuditStack
+      IsTerminal: false
+      RuleOrder: 11
+      RuleStatus: ENABLED
+  SuppressElzDeploymentUpdatePipelineLambdaRole:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-deployment-UpdatePipelineLambdaRole
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings from LZA elz-deployment-UpdatePipelineLambdaRole
+      RuleName: Suppress elz-deployment-UpdatePipelineLambdaRole
+      IsTerminal: false
+      RuleOrder: 12
+      RuleStatus: ENABLED
+  SuppressElzS3LogsManagementAccS3Bucket:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-s3-logs-
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings related to elz-s3-logs- S3 bucket created by lza-deployment cloudformation stack
+      RuleName: Suppress elz-s3-logs S3 Buckets
+      IsTerminal: false
+      RuleOrder: 13
+      RuleStatus: ENABLED
+  SuppressElzConfigManagementAccS3Bucket:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-config-
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings related to elz-config- S3 bucket created by lza-deployment cloudformation stack
+      RuleName: Suppress elz-config S3 Buckets
+      IsTerminal: false
+      RuleOrder: 14
+      RuleStatus: ENABLED
+  SuppressElzSSMRolePolicy:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: elz-SessionManagerLogging
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings related to elz-SessionManagerLogging IAM Policy created by lza-deployment cloudformation stack
+      RuleName: Suppress elz-SessionManagerLogging IAM Policy
+      IsTerminal: false
+      RuleOrder: 15
+      RuleStatus: ENABLED
+  SuppressLZADeploymentLambdaRole:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: -deployment-UpdatePipelineLambdaRole
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings related to lza<version>-deployment-UpdatePipelineLambdaRole<id> IAM Role created by lza-deployment cloudformation stack
+      RuleName: Suppress -deployment-UpdatePipelineLambdaRole IAM Role
+      IsTerminal: false
+      RuleOrder: 16
+      RuleStatus: ENABLED
+  SuppressAcceleratorGithubTokenSecretRotation:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: github-token
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings related to accelerator/github-token Secret
+      RuleName: Suppress accelerator/github-token Secret
+      IsTerminal: false
+      RuleOrder: 17
+      RuleStatus: ENABLED
+  SuppressCodePipelineSourceTrail:
+    Type: AWS::SecurityHub::AutomationRule
+    Properties:
+      Criteria:
+        ResourceId:
+          - Comparison: CONTAINS
+            Value: codepipeline-source-trail
+        WorkflowStatus:
+          - Comparison: NOT_EQUALS
+            Value: SUPPRESSED
+          - Comparison: NOT_EQUALS
+            Value: RESOLVED
+      Actions:
+        - FindingFieldsUpdate:
+            Workflow:
+              Status: SUPPRESSED
+          Type: FINDING_FIELDS_UPDATE
+      Description: Suppress findings related to codepipeline-source-trail CloudTrail trail
+      RuleName: Suppress codepipeline-source-trail CloudTrail trail
+      IsTerminal: false
+      RuleOrder: 18
+      RuleStatus: ENABLED

@@ -1,0 +1,121 @@
+homeRegion: &HOME_REGION eu-west-2
+enable: true
+organizationalUnits:
+  - name: Backups
+  - name: Closed
+    ignore: true
+  - name: NetworkServices
+  - name: PolicyStaging
+  - name: Quarantine
+  - name: Sandbox
+  - name: SecurityServices
+  - name: SharedServices
+  - name: Workloads
+  - name: Workloads/Dev
+  - name: Workloads/Pre
+  - name: Workloads/Pro
+quarantineNewAccounts:
+  enable: true
+  scpPolicyName: Quarantine
+serviceControlPolicies:
+  - name: Backups
+    description: >
+      The Backup SCP prevents backup operations within the backup account unless done through approved roles/action.
+    policy: service-control-policies/backups.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Backups
+#  - name: BackupsPlatform
+#    description: >
+#      The BackupPlatform SCP prevents backup operations within the platform unless done through approved roles/actions.
+#    policy: service-control-policies/backups-platform.json
+#    type: customerManaged
+#    deploymentTargets:
+#      organizationalUnits:
+#        - Workloads
+#        - ANY-OTHER-NON-WORKLOAD-OU (E.g. Networking)
+  - name: Global
+    description: >
+      The Global SCP denies users access to any operations outside of the default platform region and prevents users  from being able to perform non-compliant actions across various AWS services.
+    policy: service-control-policies/global.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: NetworkServices
+    description: >
+      The NetworkServices SCP is used to prevent users from being able to perform any actions on non-network AWS  services.
+    policy: service-control-policies/networkservices.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - NetworkServices
+  - name: PlatformGuardrails1
+    description: >
+      The Platform GuardRails 1 SCP is used to prevent users from being able to change the security configuration of the  platform.
+    policy: service-control-policies/guardrails-1.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: PlatformGuardrails2
+    description: >
+      The Platform GuardRails 2 SCP is used to prevent users from being able to change the security configuration of the  platform.
+    policy: service-control-policies/guardrails-2.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: PlatformGuardrails3
+    description: >
+      The Platform GuardRails 3 SCP is used to prevent users from being able to change the security configuration of the  platform.
+    policy: service-control-policies/guardrails-3.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: Quarantine
+    description: >
+      This Quarantine SCP is used prevents users in any affected account from performing any create, update or delete  actions on any AWS resources, but does allow them to view them.
+    policy: service-control-policies/quarantine.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Quarantine
+  - name: Sandbox
+    description: >
+      The Sandbox SCP is used to prevent users from being able to perform any non-compliant actions.
+    policy: service-control-policies/sandbox.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Sandbox
+  - name: Workloads
+    description: >
+      The Workloads SCP is used to prevent users from being able to perform any non-compliant actions.
+    policy: service-control-policies/workloads.json
+    type: customerManaged
+    deploymentTargets:
+      organizationalUnits:
+        - Workloads
+taggingPolicies:
+  - name: ELZTagCasePolicy
+    description: ELZ Organization Tagging Key Case Policy
+    policy: tagging-policies/elz-org-tag-key-case-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: ELZTagValuePolicy
+    description: ELZ Organization Tagging Key Value Policy
+    policy: tagging-policies/elz-org-tag-key-value-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Root
+  - name: CustomerTagValuePolicy
+    description: Customer Organization Tagging Key Value Policy
+    policy: tagging-policies/customer-org-tag-key-value-policy.json
+    deploymentTargets:
+      organizationalUnits:
+        - Workloads
+backupPolicies: []

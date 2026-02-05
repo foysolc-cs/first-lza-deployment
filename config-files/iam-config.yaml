@@ -1,0 +1,147 @@
+policySets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Workloads
+        - Workloads/Dev
+        - Workloads/Pre
+        - Workloads/Pro
+    policies:
+      - name: Service-Boundary-Policy
+        policy: iam-policies/service-boundary-policy.json
+  - deploymentTargets:
+      accounts:
+        - Management
+    policies:
+      - name: BreakGlass-User-Boundary-Policy
+        policy: iam-policies/breakglass-user-boundary-policy.json
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    policies:
+      - name: S3WriteAccess-Policy
+        policy: iam-policies/s3writeaccess-policy.json
+  - deploymentTargets:
+      accounts:
+        - Management
+        - Audit
+    policies:
+      - name: PlatformAdminAccess
+        policy: iam-policies/platformadminaccess-policy.json
+roleSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    roles:
+      - name: EC2-Default-SSM-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com
+        policies:
+          awsManaged:
+            - AmazonInspector2ManagedCisPolicy
+            - AmazonSSMManagedInstanceCore
+            - CloudWatchAgentServerPolicy
+          customerManaged:
+            - S3WriteAccess-Policy
+      - name: Budgets-Role
+        assumedBy:
+          - type: service
+            principal: budgets.amazonaws.com
+        policies:
+          awsManaged:
+            - AWSBudgetsActionsWithAWSResourceControlAccess
+groupSets:
+  - deploymentTargets:
+      accounts:
+        - Management
+    groups:
+      - name: BreakGlassAdmins
+        policies:
+          awsManaged:
+            - AdministratorAccess
+userSets:
+  - deploymentTargets:
+      accounts:
+        - Management
+    users:
+      - username: breakGlassUser01
+        group: BreakGlassAdmins
+        boundaryPolicy: BreakGlass-User-Boundary-Policy
+      - username: breakGlassUser02
+        group: BreakGlassAdmins
+        boundaryPolicy: BreakGlass-User-Boundary-Policy
+# identityCenter:
+#   name: IdentityCenter
+#   delegatedAdminAccount: Audit
+#   identityCenterPermissionSets:
+#     - name: ReadOnly
+#       description: "Read Only Access"
+#       policies:
+#         awsManaged:
+#           - arn:aws:iam::aws:policy/ReadOnlyAccess
+#           - arn:aws:iam::aws:policy/AWSSupportAccess
+#     - name: SecOps
+#       description: "Security Audit Access"
+#       policies:
+#         awsManaged:
+#           - arn:aws:iam::aws:policy/SecurityAudit
+#     - name: FinOps
+#       description: "Billing Access"
+#       policies:
+#         awsManaged:
+#           - arn:aws:iam::aws:policy/job-function/Billing
+#     - name: NetOps
+#       description: "Network Administrator Access"
+#       policies:
+#         awsManaged:
+#           - arn:aws:iam::aws:policy/job-function/NetworkAdministrator
+#     - name: BreakglassFullAdminAccess
+#       description: "Emergency access"
+#       policies:
+#         awsManaged:
+#           - arn:aws:iam::aws:policy/AdministratorAccess
+#     - name: PlatformAdmin
+#       description: "Platform Administrator Access to perform routine engineering tasks in the management account."
+#       policies:
+#         awsManaged:
+#           - arn:aws:iam::aws:policy/ReadOnlyAccess
+#           - arn:aws:iam::aws:policy/AWSSupportAccess
+#         customerManaged:
+#           -  PlatformAdminAccess
+#   identityCenterAssignments:
+#     - name: ReadOnly
+#       permissionSetName: ReadOnly
+#       principals:
+#         - type: GROUP
+#           name: ReadOnly
+#       deploymentTargets:
+#           accounts:
+#             - Management
+#           organizationalUnits:
+#             - Root
+#     - name: BreakGlass-Management
+#       permissionSetName: BreakglassFullAdminAccess
+#       principals:
+#         - type: GROUP
+#           name: PIM-BreakGlassAdmins
+#       deploymentTargets:
+#           accounts:
+#             - Management
+#     - name: BreakGlass-NonManagement
+#       permissionSetName: BreakglassFullAdminAccess
+#       principals:
+#         - type: GROUP
+#           name: BreakGlassPowerAdmins
+#       deploymentTargets:
+#           organizationalUnits:
+#             - Workloads/Pro
+#     - name: PlatformAdmin
+#       permissionSetName: PlatformAdmin
+#       principals:
+#         - type: GROUP
+#           name: PlatformAdmin
+#       deploymentTargets:
+#           accounts:
+#             - Management
+#             - Audit

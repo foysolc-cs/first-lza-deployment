@@ -1,0 +1,54 @@
+# terraformModules:
+#   - name: elz-observability-core
+#     description: Deploy core observability module to the observability account.
+#     source: "github.com/cloudscaler/elz-observability-core"
+#     deploymentTargets:
+#       accounts:
+#         - Observability
+#     regions:
+#       - eu-west-2
+#     variables:
+#       - name: allowed_source_org_ous
+#         value: ["o-p9ewnfbl04/ou-vd9x-ymlpfz11/ou-vd9x-bn2nxvrv"]
+#       - name: jira_sm_alert_api_key
+#         value: dummyJiraAPIKey
+#       - name: oam_resource_types
+#         value: ["AWS::Logs::LogGroup", "AWS::ApplicationInsights::Application"]
+#       - name: slack_webhook_url
+#         value: dummySlackAPIKey
+
+#   - name: elz-observability-account
+#     description: Deploy account observability module to production workload accounts.
+#     source: "github.com/cloudscaler/elz-observability-account"
+#     deploymentTargets:
+#       organizationalUnits:
+#         - Workloads/Pro
+#     regions:
+#       - eu-west-2
+#     variables:
+#       - name: oam_resource_types
+#         value: ["AWS::Logs::LogGroup", "AWS::ApplicationInsights::Application"]
+#       - name: oam_sink_id
+#         value: module.elz-observability-core-eu-west-2-observability.oam_sink_id
+
+#   - name: elz-siem-core
+#     description: Deploy Security Event configuration to
+#     source: "github.com/cloudscaler/elz-observability-account"
+#     deploymentTargets:
+#       accounts:
+#         - Audit
+#     regions:
+#       - eu-west-2
+#     variables:
+#       - name: jira_sm_alert_api_key
+#         value: dummyJiraAPIKey
+#       - name: jira_sm_alert_url
+#         value: dummyJiraAPIKey
+#       - name: slack_webhook_url
+#         value: dummySlackAPIKey
+#       - name: region
+#         value: "eu-west-2"
+#       - name: working_regions
+#         value: ["eu-west-2"]
+#       - name: enable_jira_integration_securityhub
+#         value: false
