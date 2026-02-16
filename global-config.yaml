@@ -58,7 +58,7 @@ logging:
     dynamicPartitioning: dynamic-partitioning/log-filters.json
     subscription:
       type: ACCOUNT
-      selectionCriteria: 'LogGroupName NOT IN ["/aws/lambda/{{AcceleratorPrefix}}-FirehoseRecordsProcessor", "aws-accelerator-cloudtrail-logs", "aws-controltower/CloudTrailLogs"]'
+      selectionCriteria: 'LogGroupName NOT IN ["/aws/lambda/{{PlatformPrefix}}-FirehoseRecordsProcessor", "aws-accelerator-cloudtrail-logs", "aws-controltower/CloudTrailLogs"]'
       overrideExisting: true
   accessLogBucket:
     lifecycleRules:

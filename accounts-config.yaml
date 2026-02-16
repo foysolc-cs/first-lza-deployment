@@ -20,7 +20,7 @@ workloadAccounts:
     description: The NetworkServices account manages the network routing configuration for all member accounts. Within this account, network administrators can manage and build security measures to protect outbound and inbound traffic, centralising networking within your environment.
     email: foysol.chowdhury+elz-networkservices@cloudscaler.com
     organizationalUnit: NetworkServices
-  - name: PolicyDevelopmemt
+  - name: PolicyDevelopment
     description: The Policy Development account is designed to manage the development and testing of service control policies, tag policies and backup policies for the AWS Organizations service.
     email: foysol.chowdhury+elz-policydevelopment@cloudscaler.com
     organizationalUnit: PolicyStaging
