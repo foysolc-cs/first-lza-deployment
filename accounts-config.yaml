@@ -14,21 +14,21 @@ mandatoryAccounts:
 workloadAccounts:
   - name: SharedServices
     description: The SharedServices account contains the shared tooling services used across all tenant accounts, where Operations, Security, Infrastructure, and Finance teams build, deploy, and share resources and products across all the accounts in the organisation.
-    email: <shared-services>@example.com <----- UPDATE EMAIL ADDRESS
+    email: foysol.chowdhury+elz-sharedservices@cloudscaler.com
     organizationalUnit: SharedServices
   - name: NetworkServices
     description: The NetworkServices account manages the network routing configuration for all member accounts. Within this account, network administrators can manage and build security measures to protect outbound and inbound traffic, centralising networking within your environment.
-    email: <networkservices>@example.com <----- UPDATE EMAIL ADDRESS
+    email: foysol.chowdhury+elz-networkservices@cloudscaler.com
     organizationalUnit: NetworkServices
   - name: PolicyDevelopmemt
     description: The Policy Development account is designed to manage the development and testing of service control policies, tag policies and backup policies for the AWS Organizations service.
-    email: <policydevelopment>@example.com <----- UPDATE EMAIL ADDRESS
+    email: foysol.chowdhury+elz-policydevelopment@cloudscaler.com
     organizationalUnit: PolicyStaging
   - name: Backups
     description: The Backups account securely stores copies of Production backups. Access is extremely restricted, and Breakglass Access is only granted when necessary; various guardrails are in place to prevent the deletion of any backups within this account.
-    email: <backups>@example.com <----- UPDATE EMAIL ADDRESS
+    email: foysol.chowdhury+elz-backups@cloudscaler.com
     organizationalUnit: Backups
   - name: Observability
     description: Observability is the cross-account monitoring account and AWS Health delegated admin. The account can access CloudWatch metrics and logs from source accounts for dashboarding a reporting purposes.
-    email: <observability>@example.com <----- UPDATE EMAIL ADDRESS
+    email: foysol.chowdhury+elz-observability@cloudscaler.com
     organizationalUnit: SharedServices
