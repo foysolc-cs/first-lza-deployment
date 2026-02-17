@@ -5,30 +5,30 @@ mandatoryAccounts:
     organizationalUnit: Root
   - name: LogArchive
     description: The log archive account. Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
-    email: foysol.chowdhury+elz-logarchive@cloudscaler.com
+    email: foysol.chowdhury+lza1-logarchive@cloudscaler.com
     organizationalUnit: SecurityServices
   - name: Audit
     description: The security audit account (also referred to as the audit account). Do not change the name field for this mandatory account. Note, the account name key does not need to match the AWS account name.
-    email: foysol.chowdhury+elz-audit@cloudscaler.com
+    email: foysol.chowdhury+lza1-audit@cloudscaler.com
     organizationalUnit: SecurityServices
 workloadAccounts:
   - name: SharedServices
     description: The SharedServices account contains the shared tooling services used across all tenant accounts, where Operations, Security, Infrastructure, and Finance teams build, deploy, and share resources and products across all the accounts in the organisation.
-    email: foysol.chowdhury+elz-sharedservices@cloudscaler.com
+    email: foysol.chowdhury+lza1-sharedservices@cloudscaler.com
     organizationalUnit: SharedServices
   - name: NetworkServices
     description: The NetworkServices account manages the network routing configuration for all member accounts. Within this account, network administrators can manage and build security measures to protect outbound and inbound traffic, centralising networking within your environment.
-    email: foysol.chowdhury+elz-networkservices@cloudscaler.com
+    email: foysol.chowdhury+lza1-networkservices@cloudscaler.com
     organizationalUnit: NetworkServices
   - name: PolicyDevelopment
     description: The Policy Development account is designed to manage the development and testing of service control policies, tag policies and backup policies for the AWS Organizations service.
-    email: foysol.chowdhury+elz-policydevelopment@cloudscaler.com
+    email: foysol.chowdhury+lza1-policydevelopment@cloudscaler.com
     organizationalUnit: PolicyStaging
   - name: Backups
     description: The Backups account securely stores copies of Production backups. Access is extremely restricted, and Breakglass Access is only granted when necessary; various guardrails are in place to prevent the deletion of any backups within this account.
-    email: foysol.chowdhury+elz-backups@cloudscaler.com
+    email: foysol.chowdhury+lza1-backups@cloudscaler.com
     organizationalUnit: Backups
   - name: Observability
     description: Observability is the cross-account monitoring account and AWS Health delegated admin. The account can access CloudWatch metrics and logs from source accounts for dashboarding a reporting purposes.
-    email: foysol.chowdhury+elz-observability@cloudscaler.com
+    email: foysol.chowdhury+lza1-observability@cloudscaler.com
     organizationalUnit: SharedServices
