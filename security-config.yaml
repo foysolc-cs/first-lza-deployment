@@ -173,49 +173,49 @@ cloudWatch:
           - Management
       metrics:
         - filterName: SignInWithoutMFAFilter
-          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          logGroupName: 'aws-accelerator-cloudtrail-logs'
           filterPattern: '{ ($.eventName="ConsoleLogin") && ($.additionalEventData.MFAUsed !="Yes") && ($.userIdentity.arn!="arn:aws:sts::*:assumed-role/AWSReservedSSO_*") }'
           metricNamespace: LogMetrics
           metricName: SignInWithoutMFA
           metricValue: '1'
         - filterName: RootAccountUsageFilter
-          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          logGroupName: 'aws-accelerator-cloudtrail-logs'
           filterPattern: '{$.userIdentity.type="Root" && $.userIdentity.invokedBy NOT EXISTS && $.eventType !="AwsServiceEvent"}'
           metricNamespace: LogMetrics
           metricName: RootAccountUsage
           metricValue: '1'
         - filterName: CloudTrailChangesMetricFilter
-          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          logGroupName: 'aws-accelerator-cloudtrail-logs'
           filterPattern: '{($.eventName=CreateTrail) || ($.eventName=UpdateTrail) || ($.eventName=DeleteTrail) || ($.eventName=StartLogging) || ($.eventName=StopLogging)}'
           metricNamespace: LogMetrics
           metricName: CloudTrailChanges
           metricValue: '1'
         - filterName: DisableOrDeleteCMKMetricFilter
-          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          logGroupName: 'aws-accelerator-cloudtrail-logs'
           filterPattern: '{($.eventSource=kms.amazonaws.com) && (($.eventName=DisableKey) || ($.eventName=ScheduleKeyDeletion))}'
           metricNamespace: LogMetrics
           metricName: DisableOrDeleteCMK
           metricValue: '1'
         - filterName: AWSConfigChangesMetricFilter
-          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          logGroupName: 'aws-accelerator-cloudtrail-logs'
           filterPattern: '{($.eventSource=config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) || ($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) || ($.eventName=PutConfigurationRecorder))}'
           metricNamespace: LogMetrics
           metricName: AWSConfigChanges
           metricValue: '1'
         - filterName: Ec2LargeInstanceChangeMetricFilter
-          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          logGroupName: 'aws-accelerator-cloudtrail-logs'
           filterPattern: '{ (($.eventName = RunInstances) || ($.eventName = RebootInstances)|| ($.eventName = StartInstances) || ($.eventName = StopInstances) || ($.eventName= TerminateInstances)) && (($.requestParameters.instanceType= *.32xlarge) || ($.requestParameters.instanceType= *.24xlarge) || ($.requestParameters.instanceType= *.18xlarge) || ($.requestParameters.instanceType= *.16xlarge) || ($.requestParameters.instanceType= *.12xlarge) || ($.requestParameters.instanceType= *.10xlarge) || ($.requestParameters.instanceType= *.9xlarge) || ($.requestParameters.instanceType= *.8xlarge) || ($.requestParameters.instanceType = *.4xlarge)) }'
           metricNamespace: LogMetrics
           metricName: EC2LargeInstanceEventCount
           metricValue: '1'
         - filterName: RootLoginEventCountFilter
-          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          logGroupName: '{aws-accelerator-cloudtrail-logs'
           filterPattern: '{($.eventName=ConsoleLogin) && ($.userIdentity.type=Root) && ($.responseElements.ConsoleLogin=Success)}'
           metricNamespace: LogMetrics
           metricName: RootLoginEventCount
           metricValue: '1'
         - filterName: BreakglassUserLoginMetricFilter
-          logGroupName: '{{PlatformPrefix}}-cloudtrail-logs'
+          logGroupName: 'aws-accelerator-cloudtrail-logs'
           filterPattern: '{ $.userIdentity.type = "IAMUser" && ($.userIdentity.userName = "breakGlassUser01" || $.userIdentity.userName = "breakGlassUser02") && $.eventName = "ConsoleLogin" && $.responseElements.ConsoleLogin = "Success" }'
           metricNamespace: LogMetrics
           metricName: BreakglassUserLogin
