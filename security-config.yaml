@@ -209,7 +209,7 @@ cloudWatch:
           metricName: EC2LargeInstanceEventCount
           metricValue: '1'
         - filterName: RootLoginEventCountFilter
-          logGroupName: '{aws-accelerator-cloudtrail-logs'
+          logGroupName: 'aws-accelerator-cloudtrail-logs'
           filterPattern: '{($.eventName=ConsoleLogin) && ($.userIdentity.type=Root) && ($.responseElements.ConsoleLogin=Success)}'
           metricNamespace: LogMetrics
           metricName: RootLoginEventCount
