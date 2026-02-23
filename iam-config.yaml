@@ -71,77 +71,77 @@ userSets:
       - username: breakGlassUser02
         group: BreakGlassAdmins
         boundaryPolicy: BreakGlass-User-Boundary-Policy
-# identityCenter:
-#   name: IdentityCenter
-#   delegatedAdminAccount: Audit
-#   identityCenterPermissionSets:
-#     - name: ReadOnly
-#       description: "Read Only Access"
-#       policies:
-#         awsManaged:
-#           - arn:aws:iam::aws:policy/ReadOnlyAccess
-#           - arn:aws:iam::aws:policy/AWSSupportAccess
-#     - name: SecOps
-#       description: "Security Audit Access"
-#       policies:
-#         awsManaged:
-#           - arn:aws:iam::aws:policy/SecurityAudit
-#     - name: FinOps
-#       description: "Billing Access"
-#       policies:
-#         awsManaged:
-#           - arn:aws:iam::aws:policy/job-function/Billing
-#     - name: NetOps
-#       description: "Network Administrator Access"
-#       policies:
-#         awsManaged:
-#           - arn:aws:iam::aws:policy/job-function/NetworkAdministrator
-#     - name: BreakglassFullAdminAccess
-#       description: "Emergency access"
-#       policies:
-#         awsManaged:
-#           - arn:aws:iam::aws:policy/AdministratorAccess
-#     - name: PlatformAdmin
-#       description: "Platform Administrator Access to perform routine engineering tasks in the management account."
-#       policies:
-#         awsManaged:
-#           - arn:aws:iam::aws:policy/ReadOnlyAccess
-#           - arn:aws:iam::aws:policy/AWSSupportAccess
-#         customerManaged:
-#           -  PlatformAdminAccess
-#   identityCenterAssignments:
-#     - name: ReadOnly
-#       permissionSetName: ReadOnly
-#       principals:
-#         - type: GROUP
-#           name: ReadOnly
-#       deploymentTargets:
-#           accounts:
-#             - Management
-#           organizationalUnits:
-#             - Root
-#     - name: BreakGlass-Management
-#       permissionSetName: BreakglassFullAdminAccess
-#       principals:
-#         - type: GROUP
-#           name: PIM-BreakGlassAdmins
-#       deploymentTargets:
-#           accounts:
-#             - Management
-#     - name: BreakGlass-NonManagement
-#       permissionSetName: BreakglassFullAdminAccess
-#       principals:
-#         - type: GROUP
-#           name: BreakGlassPowerAdmins
-#       deploymentTargets:
-#           organizationalUnits:
-#             - Workloads/Pro
-#     - name: PlatformAdmin
-#       permissionSetName: PlatformAdmin
-#       principals:
-#         - type: GROUP
-#           name: PlatformAdmin
-#       deploymentTargets:
-#           accounts:
-#             - Management
-#             - Audit
+ identityCenter:
+   name: IdentityCenter
+   delegatedAdminAccount: Audit
+   identityCenterPermissionSets:
+     - name: ReadOnly
+       description: "Read Only Access"
+       policies:
+         awsManaged:
+           - arn:aws:iam::aws:policy/ReadOnlyAccess
+           - arn:aws:iam::aws:policy/AWSSupportAccess
+     - name: SecOps
+       description: "Security Audit Access"
+       policies:
+         awsManaged:
+           - arn:aws:iam::aws:policy/SecurityAudit
+     - name: FinOps
+       description: "Billing Access"
+       policies:
+         awsManaged:
+           - arn:aws:iam::aws:policy/job-function/Billing
+     - name: NetOps
+       description: "Network Administrator Access"
+       policies:
+         awsManaged:
+           - arn:aws:iam::aws:policy/job-function/NetworkAdministrator
+     - name: BreakglassFullAdminAccess
+       description: "Emergency access"
+       policies:
+         awsManaged:
+           - arn:aws:iam::aws:policy/AdministratorAccess
+     - name: PlatformAdmin
+       description: "Platform Administrator Access to perform routine engineering tasks in the management account."
+       policies:
+         awsManaged:
+           - arn:aws:iam::aws:policy/ReadOnlyAccess
+           - arn:aws:iam::aws:policy/AWSSupportAccess
+         customerManaged:
+           -  PlatformAdminAccess
+   identityCenterAssignments:
+     - name: ReadOnly
+       permissionSetName: ReadOnly
+       principals:
+         - type: GROUP
+           name: ReadOnly
+       deploymentTargets:
+           accounts:
+             - Management
+           organizationalUnits:
+             - Root
+     - name: BreakGlass-Management
+       permissionSetName: BreakglassFullAdminAccess
+       principals:
+         - type: GROUP
+           name: PIM-BreakGlassAdmins
+       deploymentTargets:
+           accounts:
+             - Management
+     - name: BreakGlass-NonManagement
+       permissionSetName: BreakglassFullAdminAccess
+       principals:
+         - type: GROUP
+           name: BreakGlassPowerAdmins
+       deploymentTargets:
+           organizationalUnits:
+             - Workloads/Pro
+     - name: PlatformAdmin
+       permissionSetName: PlatformAdmin
+       principals:
+         - type: GROUP
+           name: PlatformAdmin
+       deploymentTargets:
+           accounts:
+             - Management
+             - Audit
