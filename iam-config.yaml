@@ -71,7 +71,7 @@ userSets:
       - username: breakGlassUser02
         group: BreakGlassAdmins
         boundaryPolicy: BreakGlass-User-Boundary-Policy
- identityCenter:
+identityCenter:
    name: IdentityCenter
    delegatedAdminAccount: Audit
    identityCenterPermissionSets:
